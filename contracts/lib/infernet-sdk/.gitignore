@@ -1,0 +1,21 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+broadcast/
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+
+# VSCode workspace config
+.vscode/
+
+# IntelliJ IDEA workspace config
+.idea
+
+# OS cache
+.DS_Store

@@ -1,0 +1,46 @@
+{
+  "log_path": "infernet_node.log",
+  "server": {
+    "port": 4000
+  },
+  "chain": {
+    "enabled": true,
+    "rpc_url": "RPC URL",
+    "registry_address": "REGISTRY ADDRESS",
+    "trail_head_blocks": 4,
+    "wallet": {
+      "max_gas_limit": 100000,
+      "private_key": "WALLET PRIVATE KEY"
+    },
+    "snapshot_sync": {
+      "sleep": 1.5,
+      "batch_size": 200
+    }
+  },
+  "docker": {
+    "username": "username",
+    "password": "password"
+  },
+  "redis": {
+    "host": "redis",
+    "port": 6379
+  },
+  "forward_stats": true,
+  "containers": [
+    {
+      "id": "reppo_hello_world",
+      "image": "ritualnetwork/hello-world-infernet:latest",
+      "description": "Reppo Hello World model",
+      "external": true,
+      "port": "4999",
+      "allowed_addresses": [],
+      "allowed_delegate_addresses": [],
+      "allowed_ips": [],
+      "command": "--bind=0.0.0.0:3000 --workers=2",
+      "env": {},
+      "gpu": false,
+      "accepted_payments": {},
+      "generates_proofs": false
+    }
+  ]
+}

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {Script, console2} from "forge-std/Script.sol";
 import {ReppoRegistry} from "../src/ReppoRegistry.sol";
 
-import {SaysGM} from "../src/SaysGM.sol";
+import {ModelContract} from "../src/ModelContract.sol";
 
 contract CallContract is Script {
     function run() public {

@@ -7,7 +7,7 @@ build-container:
 
 remove-containers:
 	docker compose -f deploy/docker-compose.yaml down || true
-	docker stop hello-world anvil-node && docker rm hello-world anvil-node || true
+	docker stop reppo_hello_world anvil-node && docker rm reppo_hello_world anvil-node || true
 
 build-multiplatform:
 	$(MAKE) -C ./container build-multiplatform
@@ -20,8 +20,8 @@ deploy-container: stop-container
 stop-container:
 	docker compose -f deploy/docker-compose.yaml kill || true
 	docker compose -f deploy/docker-compose.yaml rm -f || true
-	docker kill hello-world || true
-	docker rm hello-world || true
+	docker kill reppo_hello_world || true
+	docker rm reppo_hello_world || true
 
 watch-logs:
 	docker compose -f deploy/docker-compose.yaml logs -f

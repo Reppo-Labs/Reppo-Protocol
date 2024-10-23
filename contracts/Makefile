@@ -7,7 +7,7 @@ RPC_URL := http://localhost:8545
 
 # deploying the contract
 deploy:
-	@PRIVATE_KEY=$(sender) forge script script/Deploy.s.sol:Deploy --broadcast --rpc-url $(RPC_URL)
+	@PRIVATE_KEY=$(sender) forge script script/DevDeploy.s.sol:DevDeploy --broadcast --rpc-url $(RPC_URL)
 
 # calling sayGM()
 call-contract:

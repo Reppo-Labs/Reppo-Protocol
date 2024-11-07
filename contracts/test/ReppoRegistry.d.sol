@@ -30,7 +30,7 @@ contract ReppoRegistryTest is Test {
         vm.prank(alice);
         ModelContract modelContract = ModelContract(registry.register("testModel"));
 
-        assertEq(reppoToken.balanceOf(alice), 1);
+        assertEq(reppoToken.balanceOf(alice), 1 ether);
 
         assertEq(modelContract.modelName(), "testModel");
 

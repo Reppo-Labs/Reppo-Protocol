@@ -10,13 +10,15 @@ contract Deploy is Script {
     function run() public {
         vm.startBroadcast();
 
-        // ModelContract modelContract = new ModelContract(0x3B1554f346DFe5c482Bb4BA31b880c1C18412170, "reppo_hello_world");
-        // console.log(address(modelContract));
+        address ritualRegistry = 0xa0113fC5967707bF44d33CF9611D66726c7449B5;
 
-        // ReppoToken token = new ReppoToken();
-        // ReppoRegistry registry = new ReppoRegistry(address(token));
-        //
-        // token.mint(address(registry), 1_000_000);
+        ReppoToken token = new ReppoToken();
+        console.log("Deployed ReppoToken: ", address(token));
+
+        ReppoRegistry reppoRegistry = new ReppoRegistry(ritualRegistry, address(token));
+        console.log("Deployed ReppoRegistry: ", address(reppoRegistry));
+
+        token.mint(address(reppoRegistry), 1_000_000 ether);
 
         vm.stopBroadcast();
     }

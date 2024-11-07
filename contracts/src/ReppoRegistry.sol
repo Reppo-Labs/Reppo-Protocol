@@ -21,7 +21,7 @@ contract ReppoRegistry {
 
         ownerToModel[msg.sender] = address(modelContract);
 
-        IERC20(reppoToken).transfer(msg.sender, 1);
+        IERC20(reppoToken).transfer(msg.sender, 1 ether);
 
         return address(modelContract);
     }

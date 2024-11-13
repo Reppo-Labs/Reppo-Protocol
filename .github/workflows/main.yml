@@ -1,0 +1,36 @@
+name: Contracts CI
+
+defaults:
+  run:
+    working-directory: ./contracts
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  anvil:
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_MNEMONIC: "test test test test test test test test test test test junk"
+      TEST_SENDER: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      ETH_RPC_URL: "http://localhost:8545"
+
+    services:
+      mainnet-fork:
+        image: ghcr.io/Reppo-Labs/simple-anvil-image:main
+        ports:
+          - 8545:8545
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Show Forge version
+        run: forge --version

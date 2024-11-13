@@ -6,6 +6,8 @@ import {ReppoRegistry} from "../src/ReppoRegistry.sol";
 import {ModelContract} from "../src/ModelContract.sol";
 import {MockERC20} from "../src/MockERC20.sol";
 import {Test, console} from "forge-std/Test.sol";
+import {LibDeploy} from "infernet-test/lib/LibDeploy.sol";
+import {Registry} from "infernet-sdk/Registry.sol";
 
 contract ModelContractTest is Test {
     ReppoToken reppoToken;
@@ -14,11 +16,18 @@ contract ModelContractTest is Test {
     ModelContract public modelContract;
 
     MockERC20 public paymentToken;
-    address registry = 0x663F3ad617193148711d28f5334eE4Ed07016602;
+    // address registry = 0x663F3ad617193148711d28f5334eE4Ed07016602;
+
+    Registry REGISTRY;
 
     function setUp() public {
+        uint256 initialNonce = vm.getNonce(address(this));
+        (Registry registry,,,,,) = LibDeploy.deployContracts(address(this), initialNonce, address(this), 0);
+
+        REGISTRY = registry;
+
         reppoToken = new ReppoToken();
-        reppoRegistry = new ReppoRegistry(registry, address(reppoToken));
+        reppoRegistry = new ReppoRegistry(address(REGISTRY), address(reppoToken));
         reppoToken.mint(address(reppoRegistry), 10000 ** 18);
 
         address modelContractAddress = reppoRegistry.register("testModel");

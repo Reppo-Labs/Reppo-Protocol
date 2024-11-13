@@ -7,3 +7,6 @@
 [submodule "contracts/lib/openzeppelin-contracts"]
 	path = contracts/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "llama/Llama-3.2-1B"]
+	path = llama/Llama-3.2-1B
+	url = git@hf.co:meta-llama/Llama-3.2-1B

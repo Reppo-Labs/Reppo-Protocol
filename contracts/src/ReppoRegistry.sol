@@ -17,7 +17,8 @@ contract ReppoRegistry {
     }
 
     function register(string memory modelName) public returns (address) {
-        ModelContract modelContract = new ModelContract(ritualRegistry, modelName, address(this));
+        ModelContract modelContract = new ModelContract(ritualRegistry, address(this));
+        modelContract.setModelName(modelName);
 
         ownerToModel[msg.sender] = address(modelContract);
 
@@ -26,9 +27,9 @@ contract ReppoRegistry {
         return address(modelContract);
     }
 
-    function requestInference(address _modelContract) public {
+    function requestInference(address _modelContract, bytes memory input) public {
         ModelContract modelContract = ModelContract(_modelContract);
-        modelContract.requestInference();
+        modelContract.requestInference(input);
     }
 
     function setPaymentToken(address _modelContract, address _paymentToken) public {

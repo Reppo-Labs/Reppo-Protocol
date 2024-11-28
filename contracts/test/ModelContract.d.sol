@@ -45,7 +45,7 @@ contract ModelContractTest is Test {
         assertEq(paymentToken.balanceOf(address(modelContract.reppoRegistry())), 0 ether);
         assertEq(address(modelContract.paymentToken()), address(0x0));
 
-        modelContract.requestInference();
+        modelContract.requestInference(bytes(""));
 
         assertEq(paymentToken.balanceOf(address(modelContract)), 0 ether);
         assertEq(paymentToken.balanceOf(address(modelContract.reppoRegistry())), 0 ether);
@@ -59,7 +59,7 @@ contract ModelContractTest is Test {
         assertEq(modelContract.paymentAmount(), 10 ether);
         assertEq(paymentToken.balanceOf(address(modelContract)), 0);
 
-        modelContract.requestInference();
+        modelContract.requestInference(bytes(""));
 
         assertEq(paymentToken.balanceOf(address(modelContract)), 9 ether);
         assertEq(paymentToken.balanceOf(address(modelContract.reppoRegistry())), 1 ether);

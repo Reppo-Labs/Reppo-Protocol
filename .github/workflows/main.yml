@@ -16,13 +16,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: false
-  
+
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
       - name: Check formatting
         run: forge fmt --check
-  
+
       - name: Forge test
         run: forge test

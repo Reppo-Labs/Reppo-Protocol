@@ -15,9 +15,12 @@ contract ModelContract is CallbackConsumer {
 
     address public reppoRegistry;
 
-    constructor(address registry, string memory _modelName, address _reppoRegistry) CallbackConsumer(registry) {
-        modelName = _modelName;
+    constructor(address registry, address _reppoRegistry) CallbackConsumer(registry) {
         reppoRegistry = _reppoRegistry;
+    }
+
+    function setModelName(string memory _modelName) public {
+        modelName = _modelName;
     }
 
     function setPaymentToken(address _paymentToken) public {
@@ -28,7 +31,7 @@ contract ModelContract is CallbackConsumer {
         paymentAmount = _paymentAmount;
     }
 
-    function requestInference() public {
+    function requestInference(bytes memory input) public {
         if (address(paymentToken) != address(0x0)) {
             paymentToken.transferFrom(msg.sender, address(this), paymentAmount * 9 / 10);
             paymentToken.transferFrom(msg.sender, reppoRegistry, paymentAmount * 1 / 10);
@@ -36,7 +39,7 @@ contract ModelContract is CallbackConsumer {
 
         _requestCompute(
             modelName,
-            bytes("Good morning!"),
+            input,
             1, // redundancy
             address(0), // paymentToken
             0, // paymentAmount

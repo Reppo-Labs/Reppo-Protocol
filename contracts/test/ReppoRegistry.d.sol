@@ -44,6 +44,10 @@ contract ReppoRegistryTest is Test {
 
         assertEq(registry.ownerToModel(alice), address(modelContract));
 
+        address[] memory models = registry.getModels(alice);
+
+        assertEq(models[0], address(modelContract));
+
         assertEq(address(modelContract.paymentToken()), address(0x0));
         assertEq(modelContract.paymentAmount(), 0);
     }

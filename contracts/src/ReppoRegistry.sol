@@ -11,9 +11,19 @@ contract ReppoRegistry {
     // owner to model contract
     mapping(address => address) public ownerToModel;
 
+    // owner to list of models
+    mapping(address => address[]) public ownerToModels;
+
+    // owner to mapping of model
+    mapping(address => mapping(address => bool)) private belongsToOwner;
+
     constructor(address _ritualRegistry, address _reppoToken) {
         ritualRegistry = _ritualRegistry;
         reppoToken = _reppoToken;
+    }
+
+    function getModels(address owner) external view returns (address[] memory) {
+        return ownerToModels[owner];
     }
 
     function register(string memory modelName) public returns (address) {
@@ -21,6 +31,9 @@ contract ReppoRegistry {
         modelContract.setModelName(modelName);
 
         ownerToModel[msg.sender] = address(modelContract);
+
+        ownerToModels[msg.sender].push(address(modelContract));
+        belongsToOwner[msg.sender][address(modelContract)] = true;
 
         IERC20(reppoToken).transfer(msg.sender, 1 ether);
 

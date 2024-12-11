@@ -64,4 +64,14 @@ contract ModelContractTest is Test {
         assertEq(paymentToken.balanceOf(address(modelContract)), 9 ether);
         assertEq(paymentToken.balanceOf(address(modelContract.reppoRegistry())), 1 ether);
     }
+
+    function test_ExecuteWithETHPayment() public {
+        modelContract.setPaymentAmountInETH(1 ether);
+
+        assertEq(modelContract.paymentAmountInETH(), 1 ether);
+
+        modelContract.requestInferenceWithETH{value: 1 ether}(bytes(""));
+
+        assertEq(address(modelContract).balance, 1 ether);
+    }
 }

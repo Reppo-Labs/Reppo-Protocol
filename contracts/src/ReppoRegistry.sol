@@ -45,6 +45,11 @@ contract ReppoRegistry {
         modelContract.requestInference(input);
     }
 
+    function requestInferenceWithETH(address _modelContract, bytes memory input) public payable {
+        ModelContract modelContract = ModelContract(_modelContract);
+        modelContract.requestInferenceWithETH(input);
+    }
+
     function setPaymentToken(address _modelContract, address _paymentToken) public {
         ModelContract modelContract = ModelContract(_modelContract);
         modelContract.setPaymentToken(_paymentToken);

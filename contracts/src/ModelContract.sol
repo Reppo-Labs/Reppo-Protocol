@@ -10,6 +10,7 @@ contract ModelContract is CallbackConsumer {
 
     bytes[] public outputs;
 
+    uint256 public paymentAmountInETH;
     uint256 public paymentAmount;
     IERC20 public paymentToken;
 
@@ -31,10 +32,30 @@ contract ModelContract is CallbackConsumer {
         paymentAmount = _paymentAmount;
     }
 
+    function setPaymentAmountInETH(uint256 _paymentAmountInETH) public {
+        paymentAmountInETH = _paymentAmountInETH;
+    }
+
     function requestInference(bytes memory input) public {
         if (address(paymentToken) != address(0x0)) {
             paymentToken.transferFrom(msg.sender, address(this), paymentAmount * 9 / 10);
             paymentToken.transferFrom(msg.sender, reppoRegistry, paymentAmount * 1 / 10);
+        }
+
+        _requestCompute(
+            modelName,
+            input,
+            1, // redundancy
+            address(0), // paymentToken
+            0, // paymentAmount
+            address(0), // wallet
+            address(0) // prover
+        );
+    }
+
+    function requestInferenceWithETH(bytes memory input) public payable {
+        if (paymentAmountInETH != 0) {
+            require(msg.value >= paymentAmountInETH, "not enough payment in ETH");
         }
 
         _requestCompute(

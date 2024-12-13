@@ -11,10 +11,12 @@ contract ModelContract is CallbackConsumer {
     bytes[] public outputs;
 
     uint256 public paymentAmountInETH;
+
     uint256 public paymentAmount;
     IERC20 public paymentToken;
 
     address public reppoRegistry;
+    address public reppoMultisig;
 
     constructor(address registry, address _reppoRegistry) CallbackConsumer(registry) {
         reppoRegistry = _reppoRegistry;
@@ -34,6 +36,10 @@ contract ModelContract is CallbackConsumer {
 
     function setPaymentAmountInETH(uint256 _paymentAmountInETH) public {
         paymentAmountInETH = _paymentAmountInETH;
+    }
+
+    function setReppoMultisig(address _reppoMultisig) public {
+        reppoMultisig = _reppoMultisig;
     }
 
     function requestInference(bytes memory input) public {
@@ -56,6 +62,8 @@ contract ModelContract is CallbackConsumer {
     function requestInferenceWithETH(bytes memory input) public payable {
         if (paymentAmountInETH != 0) {
             require(msg.value >= paymentAmountInETH, "not enough payment in ETH");
+            (bool success,) = reppoMultisig.call{value: msg.value * 1 / 10}("");
+            require(success, "transfer failed");
         }
 
         _requestCompute(

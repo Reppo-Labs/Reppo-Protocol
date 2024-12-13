@@ -20,6 +20,8 @@ contract ModelContractTest is Test {
 
     Registry REGISTRY;
 
+    address reppoMultisig = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
+
     function setUp() public {
         uint256 initialNonce = vm.getNonce(address(this));
         (Registry registry,,,,,) = LibDeploy.deployContracts(address(this), initialNonce, address(this), 0);
@@ -27,7 +29,7 @@ contract ModelContractTest is Test {
         REGISTRY = registry;
 
         reppoToken = new ReppoToken();
-        reppoRegistry = new ReppoRegistry(address(REGISTRY), address(reppoToken));
+        reppoRegistry = new ReppoRegistry(address(REGISTRY), address(reppoToken), reppoMultisig);
         reppoToken.mint(address(reppoRegistry), 10000 ** 18);
 
         address modelContractAddress = reppoRegistry.register("testModel");
@@ -66,12 +68,17 @@ contract ModelContractTest is Test {
     }
 
     function test_ExecuteWithETHPayment() public {
-        modelContract.setPaymentAmountInETH(1 ether);
+        modelContract.setPaymentAmountInETH(10 ether);
+        uint256 multisigBalanceBefore = address(reppoMultisig).balance;
 
-        assertEq(modelContract.paymentAmountInETH(), 1 ether);
+        assertEq(modelContract.reppoMultisig(), reppoMultisig);
+        assertEq(address(reppoMultisig).balance, multisigBalanceBefore);
 
-        modelContract.requestInferenceWithETH{value: 1 ether}(bytes(""));
+        assertEq(modelContract.paymentAmountInETH(), 10 ether);
 
-        assertEq(address(modelContract).balance, 1 ether);
+        modelContract.requestInferenceWithETH{value: 10 ether}(bytes(""));
+
+        assertEq(address(modelContract).balance, 9 ether);
+        assertEq(address(reppoMultisig).balance, multisigBalanceBefore + 1 ether);
     }
 }

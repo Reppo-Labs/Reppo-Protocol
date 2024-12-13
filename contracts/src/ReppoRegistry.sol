@@ -7,6 +7,7 @@ import {ModelContract} from "./ModelContract.sol";
 contract ReppoRegistry {
     address public ritualRegistry;
     address public reppoToken;
+    address public reppoMultisig;
 
     // owner to model contract
     mapping(address => address) public ownerToModel;
@@ -17,9 +18,10 @@ contract ReppoRegistry {
     // owner to mapping of model
     mapping(address => mapping(address => bool)) private belongsToOwner;
 
-    constructor(address _ritualRegistry, address _reppoToken) {
+    constructor(address _ritualRegistry, address _reppoToken, address _reppoMultisig) {
         ritualRegistry = _ritualRegistry;
         reppoToken = _reppoToken;
+        reppoMultisig = _reppoMultisig;
     }
 
     function getModels(address owner) external view returns (address[] memory) {
@@ -29,6 +31,7 @@ contract ReppoRegistry {
     function register(string memory modelName) public returns (address) {
         ModelContract modelContract = new ModelContract(ritualRegistry, address(this));
         modelContract.setModelName(modelName);
+        modelContract.setReppoMultisig(reppoMultisig);
 
         ownerToModel[msg.sender] = address(modelContract);
 
@@ -58,5 +61,10 @@ contract ReppoRegistry {
     function setPaymentAmount(address _modelContract, uint256 _paymentAmount) public {
         ModelContract modelContract = ModelContract(_modelContract);
         modelContract.setPaymentAmount(_paymentAmount);
+    }
+
+    function setPaymentAmountInETH(address _modelContract, uint256 _paymentAmount) public {
+        ModelContract modelContract = ModelContract(_modelContract);
+        modelContract.setPaymentAmountInETH(_paymentAmount);
     }
 }

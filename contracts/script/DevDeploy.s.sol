@@ -20,7 +20,7 @@ contract DevDeploy is Script {
         ReppoToken token = new ReppoToken();
         console2.log("Deployed ReppoToken: ", address(token));
 
-        ReppoRegistry reppoRegistry = new ReppoRegistry(registry, address(token));
+        ReppoRegistry reppoRegistry = new ReppoRegistry(registry, address(token), address(0));
         console2.log("Deployed ReppoRegistry: ", address(reppoRegistry));
 
         // // Create consumer

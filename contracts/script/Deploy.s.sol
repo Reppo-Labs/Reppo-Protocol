@@ -15,7 +15,7 @@ contract Deploy is Script {
         ReppoToken token = new ReppoToken();
         console.log("Deployed ReppoToken: ", address(token));
 
-        ReppoRegistry reppoRegistry = new ReppoRegistry(ritualRegistry, address(token));
+        ReppoRegistry reppoRegistry = new ReppoRegistry(ritualRegistry, address(token), address(0));
         console.log("Deployed ReppoRegistry: ", address(reppoRegistry));
 
         token.mint(address(reppoRegistry), 1_000_000 ether);

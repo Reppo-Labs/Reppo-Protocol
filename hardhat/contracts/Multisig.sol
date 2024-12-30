@@ -6,8 +6,10 @@ interface IOwnership {
     function updateRecord(
         string memory modelId, 
         string memory description,
+        address updateAdmin,
         address[] memory owners,
-        uint256[] memory percentages
+        uint256[] memory percentages,
+        address ipAccountAddress
     ) external;
 }
 
@@ -25,10 +27,19 @@ contract Multisig {
     function updateRecord(
         string memory modelId, 
         string memory description,
+        address updateAdmin,
         address[] memory owners,
-        uint256[] memory percentages
+        uint256[] memory percentages,
+        address ipAccountAddress
     ) public {
-        IOwnership(ownershipContract).updateRecord(modelId, description, owners, percentages);
+        IOwnership(ownershipContract).updateRecord(
+            modelId, 
+            description,
+            updateAdmin,
+            owners, 
+            percentages,
+            ipAccountAddress
+        );
     }
 
 }

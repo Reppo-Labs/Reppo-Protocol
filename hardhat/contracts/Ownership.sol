@@ -8,75 +8,83 @@ import "hardhat/console.sol";
 contract Ownership {
 
     struct Record {
-        string modelId;
+        string podId;
         uint256 createdAt;
         address creator;
-        address multiSigContract;
-        string description;
+        address updateAdmin;
+        string podDescription;
         address[] owners;
-        uint256[] percentages;
+        uint256[] ownershipPercentages;
+        address ipAccountAddress;
     }
 
-    event RecordCreated(string modelId, address creator);
-    event RecordUpdated(string modelId);
+    event RecordCreated(string podId, address creator);
+    event RecordUpdated(string podId);
 
     mapping(uint256 => Record) public records;
 
     function createRecord(
-        string calldata modelId, 
-        string calldata description, 
-        address multiSigContract,
+        string calldata podId, 
+        string calldata podDescription, 
+        address updateAdmin,
         address[] calldata owners,
-        uint256[] calldata percentages
+        uint256[] calldata ownershipPercentages,
+        address ipAccountAddress
     ) public {
-        validateCreateRecord(modelId, owners, percentages);
-        records[uint256(keccak256(abi.encodePacked(modelId)))] = Record({
-            modelId: modelId,
+        validateCreateRecord(podId, owners, ownershipPercentages);
+        records[uint256(keccak256(abi.encodePacked(podId)))] = Record({
+            podId: podId,
             createdAt: block.timestamp,
             creator: msg.sender,
-            multiSigContract: multiSigContract,
-            description: description,
+            updateAdmin: updateAdmin,
+            podDescription: podDescription,
             owners: owners,
-            percentages: percentages
+            ownershipPercentages: ownershipPercentages,
+            ipAccountAddress: ipAccountAddress
         });
-        emit RecordCreated(modelId, msg.sender);
+        emit RecordCreated(podId, msg.sender);
     }
 
     function updateRecord(
-        string calldata modelId, 
-        string calldata description,
+        string calldata podId, 
+        string calldata podDescription,
+        address updateAdmin,
         address[] calldata owners,
-        uint256[] calldata percentages
+        uint256[] calldata ownershipPercentages,
+        address ipAccountAddress
+
     ) external {
-        Record storage record = records[uint256(keccak256(abi.encodePacked(modelId)))];
-        validateUpdateRecord(record.createdAt, record.multiSigContract, owners, percentages);
-        record.description = description;
+        Record storage record = records[uint256(keccak256(abi.encodePacked(podId)))];
+        validateUpdateRecord(record.createdAt, record.updateAdmin, owners, ownershipPercentages);
+        record.podDescription = podDescription;
+        record.updateAdmin = updateAdmin;
         record.owners = owners;
-        record.percentages = percentages;
-        emit RecordUpdated(modelId);
+        record.ownershipPercentages = ownershipPercentages;
+        record.ipAccountAddress = ipAccountAddress;
+        emit RecordUpdated(podId);
     }
 
-    function getRecord(string calldata modelId) public view returns (Record memory) {
-        return records[uint256(keccak256(abi.encodePacked(modelId)))];
+    function getRecord(string calldata podId) public view returns (Record memory) {
+        return records[uint256(keccak256(abi.encodePacked(podId)))];
     }
 
-    function validateCreateRecord(string calldata modelId, address[] calldata owners, uint256[] calldata percentages) internal view {
-        validateRecordParameters(owners, percentages);
-        Record memory record = records[uint256(keccak256(abi.encodePacked(modelId)))];
+    function validateCreateRecord(string calldata podId, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
+        validateRecordParameters(owners, ownershipPercentages);
+        Record memory record = records[uint256(keccak256(abi.encodePacked(podId)))];
         require(record.createdAt == 0, "Record already exists");
     }
 
-    function validateUpdateRecord(uint256 createdAt, address multisig, address[] calldata owners, uint256[] calldata percentages) internal view {
+    function validateUpdateRecord(uint256 createdAt, address multisig, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
         require(createdAt != 0, "Record does not exist");
-        validateRecordParameters(owners, percentages);
+        validateRecordParameters(owners, ownershipPercentages);
         require(multisig == msg.sender, "Only multisig contract can update record");
     }
 
-    function validateRecordParameters(address[] calldata owners, uint256[] calldata percentages) internal pure {
-        require(owners.length == percentages.length, "Owners and percentages length should be equal");
+    function validateRecordParameters(address[] calldata owners, uint256[] calldata ownershipPercentages) internal pure {
+        require(owners.length == ownershipPercentages.length, "Owners and percentages length should be equal");
         uint256 totalPercentage = 0;
         for (uint256 i = 0; i < owners.length; i++) {
-            totalPercentage += percentages[i];
+            totalPercentage += ownershipPercentages[i];
         }
         require(totalPercentage == 100, "Total percentage should be 100");
     }

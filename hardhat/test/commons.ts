@@ -10,14 +10,14 @@ export const createRecordType1 = async (
     const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
     const owners = [ownerAddress];
     const percentages = [100n];
-    const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+    const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
     await ownershipContract.createRecord(
         podId,
         podDescription,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
     );
     return {
         podId,
@@ -25,7 +25,7 @@ export const createRecordType1 = async (
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
     }
 }
 
@@ -39,14 +39,14 @@ export const createRecordType2 = async (
     const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
     const owners = [ownerAddress, otherAddress];
     const percentages = [40n, 60n];
-    const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+    const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
     await ownershipContract.createRecord(
         podId,
         podDescription,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
     );
     return {
         podId,
@@ -54,7 +54,7 @@ export const createRecordType2 = async (
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
     }
 }
 
@@ -67,14 +67,14 @@ export const createRecordType3 = async (
     const podDescription = "model 01 description";
     const owners = [ownerAddress];
     const percentages = [100n];
-    const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+    const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
     await ownershipContract.createRecord(
         podId,
         podDescription,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
     );
     return {
         podId,
@@ -82,6 +82,6 @@ export const createRecordType3 = async (
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
     }
 }

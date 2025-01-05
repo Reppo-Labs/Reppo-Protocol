@@ -40,7 +40,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
       } = await createRecordType1(ownership, owner.address);
       const record = await ownership.getRecord(podId);
       expect(record.podId).to.equal(podId);
@@ -48,7 +48,7 @@ describe("Ownership", function () {
       expect(record.updateAdmin).to.equal(updateAdmin);
       expect(record.owners).to.eql(owners);
       expect(record.ownershipPercentages).to.eql(percentages);
-      expect(record.ipAccountAddress).to.equal(ipAccountAddress);
+      expect(record.ipAccountAddresses).to.eql(ipAccountAddresses);
     });
 
     it("Can create a record with multiple owners", async function () {
@@ -59,7 +59,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
       } = await createRecordType2(ownership, owner.address, otherAccount.address);
       const record = await ownership.getRecord(podId);
       expect(record.podId).to.equal(podId);
@@ -67,7 +67,7 @@ describe("Ownership", function () {
       expect(record.updateAdmin).to.equal(updateAdmin);
       expect(record.owners).to.eql(owners);
       expect(record.ownershipPercentages).to.eql(percentages);
-      expect(record.ipAccountAddress).to.equal(ipAccountAddress);
+      expect(record.ipAccountAddresses).to.eql(ipAccountAddresses);
     });
 
     it ("Throws an error when creating record with invalid percentages", async function () {
@@ -77,14 +77,14 @@ describe("Ownership", function () {
       const multiSigContract = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address, otherAccount.address];
       const percentages = [60n, 50n];
-      const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.createRecord(
         podId,
         description,
         multiSigContract,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.be.revertedWith("Total percentage should be 100");
     });
 
@@ -95,14 +95,14 @@ describe("Ownership", function () {
       const multiSigContract = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address];
       const percentages = [60n, 40n];
-      const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.createRecord(
         modelId,
         description,
         multiSigContract,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.be.revertedWith("Owners and percentages length should be equal");
     });
 
@@ -114,7 +114,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
       } = await createRecordType1(ownership, owner.address);
       await expect(ownership.createRecord(
         podId,
@@ -122,7 +122,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.be.revertedWith("Record already exists");
     });
 
@@ -133,14 +133,14 @@ describe("Ownership", function () {
       const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address];
       const percentages = [100n];
-      const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.createRecord(
         podId,
         description,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.emit(ownership, "RecordCreated").withArgs(
         podId,
         owner.address,
@@ -157,14 +157,14 @@ describe("Ownership", function () {
       const percentages = [100n];
       const description = "new description";
       const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
-      const ipAccountAddress = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
+      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.updateRecord(
         "model01",
         description,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.be.revertedWith("Record does not exist");
     });
 
@@ -176,7 +176,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
       } = await createRecordType1(ownership, owner.address);
       const newDescription: string = "new description";
       await expect(ownership.connect(owner).updateRecord(
@@ -185,7 +185,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.be.revertedWith("Only multisig contract can update record");
     });
 
@@ -198,7 +198,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
       } = await createRecordType3(ownership, owner.address, multisig.target);
       const newDescription = "new description";
       const newOwners = [owner.address, otherAccount.address];
@@ -209,7 +209,7 @@ describe("Ownership", function () {
         updateAdmin,
         newOwners,
         newPercentages,
-        ipAccountAddress
+        ipAccountAddresses
       );
       const record = await ownership.getRecord(podId);
       expect(record.podId).to.equal(podId);
@@ -228,7 +228,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress,
+        ipAccountAddresses,
       } = await createRecordType3(ownership, owner.address, multisig.target);
       const newDescription: string = "new description";
       await expect(multisig.updateRecord(
@@ -237,7 +237,7 @@ describe("Ownership", function () {
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddress
+        ipAccountAddresses
       )).to.emit(ownership, "RecordUpdated").withArgs(
         podId,
       );

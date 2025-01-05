@@ -15,7 +15,7 @@ contract Ownership {
         string podDescription;
         address[] owners;
         uint256[] ownershipPercentages;
-        address ipAccountAddress;
+        address[] ipAccountAddresses;
     }
 
     event RecordCreated(string podId, address creator);
@@ -29,7 +29,7 @@ contract Ownership {
         address updateAdmin,
         address[] calldata owners,
         uint256[] calldata ownershipPercentages,
-        address ipAccountAddress
+        address[] calldata ipAccountAddresses
     ) public {
         validateCreateRecord(podId, owners, ownershipPercentages);
         records[uint256(keccak256(abi.encodePacked(podId)))] = Record({
@@ -40,7 +40,7 @@ contract Ownership {
             podDescription: podDescription,
             owners: owners,
             ownershipPercentages: ownershipPercentages,
-            ipAccountAddress: ipAccountAddress
+            ipAccountAddresses: ipAccountAddresses
         });
         emit RecordCreated(podId, msg.sender);
     }
@@ -51,8 +51,7 @@ contract Ownership {
         address updateAdmin,
         address[] calldata owners,
         uint256[] calldata ownershipPercentages,
-        address ipAccountAddress
-
+        address[] calldata ipAccountAddresses
     ) external {
         Record storage record = records[uint256(keccak256(abi.encodePacked(podId)))];
         validateUpdateRecord(record.createdAt, record.updateAdmin, owners, ownershipPercentages);
@@ -60,7 +59,7 @@ contract Ownership {
         record.updateAdmin = updateAdmin;
         record.owners = owners;
         record.ownershipPercentages = ownershipPercentages;
-        record.ipAccountAddress = ipAccountAddress;
+        record.ipAccountAddresses = ipAccountAddresses;
         emit RecordUpdated(podId);
     }
 

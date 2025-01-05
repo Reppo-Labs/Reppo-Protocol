@@ -9,7 +9,7 @@ interface IOwnership {
         address updateAdmin,
         address[] memory owners,
         uint256[] memory percentages,
-        address ipAccountAddress
+        address[] memory ipAccountAddresses
     ) external;
 }
 
@@ -30,7 +30,7 @@ contract Multisig {
         address updateAdmin,
         address[] memory owners,
         uint256[] memory percentages,
-        address ipAccountAddress
+        address[] memory ipAccountAddresses
     ) public {
         IOwnership(ownershipContract).updateRecord(
             modelId, 
@@ -38,7 +38,7 @@ contract Multisig {
             updateAdmin,
             owners, 
             percentages,
-            ipAccountAddress
+            ipAccountAddresses
         );
     }
 

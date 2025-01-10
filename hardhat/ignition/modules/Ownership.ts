@@ -7,6 +7,6 @@ const OwnershipModule = buildModule("OwnershipModule", (m) => {
 
 export default OwnershipModule;
 
-// 0xAA62B53c5717Ab6BBD496D5F9dA89f3dE453B0df
+// 0x5301A02241764D4b24949c7Ffc48A3Ecc30d71C1
 // npx hardhat ignition deploy ignition/modules/Ownership.ts --network base-sepolia --deployment-id ownership-base-sepolia
 // npx hardhat ignition verify ownership-base-sepolia

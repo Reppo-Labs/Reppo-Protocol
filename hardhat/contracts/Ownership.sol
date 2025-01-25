@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import "hardhat/console.sol";
-
-// created by reppo labs at 2025-01-10 14:31
+// created by reppo labs at 2025-01-25 19:12
 
 contract Ownership {
 
@@ -85,7 +83,7 @@ contract Ownership {
         for (uint256 i = 0; i < owners.length; i++) {
             totalPercentage += ownershipPercentages[i];
         }
-        require(totalPercentage == 100, "Total percentage should be 100");
+        require(totalPercentage == 10000, "Total percentage should be 100");
     }
 
 }

@@ -14,4 +14,3 @@ export default OwnershipModule;
 // 0x5a359204e36143d1Bc6dB2760f68a5427c4B35E1
 // npx hardhat ignition deploy ignition/modules/Ownership.ts --network story-testnet --deployment-id ownership-story-testnet-v2
 // npx hardhat ignition verify ownership-story-testnet-v2
-// npx hardhat verify --network story-testnet 0x8A1BCBd935c9c7350013786D5d1118832F10e149

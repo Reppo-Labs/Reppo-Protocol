@@ -76,7 +76,7 @@ describe("Ownership", function () {
       const description = "model 01 description";
       const multiSigContract = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address, otherAccount.address];
-      const percentages = [60n, 50n];
+      const percentages = [6000n, 5000n];
       const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.createRecord(
         podId,
@@ -94,7 +94,7 @@ describe("Ownership", function () {
       const description = "model 01 description";
       const multiSigContract = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address];
-      const percentages = [60n, 40n];
+      const percentages = [6000n, 4000n];
       const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.createRecord(
         modelId,
@@ -132,7 +132,7 @@ describe("Ownership", function () {
       const description = "model 01 description";
       const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address];
-      const percentages = [100n];
+      const percentages = [10000n];
       const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
       await expect(ownership.createRecord(
         podId,
@@ -154,7 +154,7 @@ describe("Ownership", function () {
     it ("Throws an error when update is called with invalid modelId", async function () {
       const { ownership, owner } = await loadFixture(deployOwnership);
       const owners = [owner.address];
-      const percentages = [100n];
+      const percentages = [10000n];
       const description = "new description";
       const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
@@ -202,7 +202,7 @@ describe("Ownership", function () {
       } = await createRecordType3(ownership, owner.address, multisig.target);
       const newDescription = "new description";
       const newOwners = [owner.address, otherAccount.address];
-      const newPercentages = [40n, 60n];
+      const newPercentages = [4000n, 6000n];
       await multisig.updateRecord(
         podId,
         newDescription,

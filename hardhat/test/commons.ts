@@ -9,7 +9,7 @@ export const createRecordType1 = async (
     const podDescription = "model 01 description";
     const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
     const owners = [ownerAddress];
-    const percentages = [100n];
+    const percentages = [10000n];
     const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
     await ownershipContract.createRecord(
         podId,
@@ -38,7 +38,7 @@ export const createRecordType2 = async (
     const podDescription = "model 01 description";
     const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
     const owners = [ownerAddress, otherAddress];
-    const percentages = [40n, 60n];
+    const percentages = [4000n, 6000n];
     const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
     await ownershipContract.createRecord(
         podId,
@@ -66,7 +66,7 @@ export const createRecordType3 = async (
     const podId = "model01";
     const podDescription = "model 01 description";
     const owners = [ownerAddress];
-    const percentages = [100n];
+    const percentages = [10000n];
     const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
     await ownershipContract.createRecord(
         podId,

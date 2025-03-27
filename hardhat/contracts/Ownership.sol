@@ -21,7 +21,7 @@ contract Ownership {
 
     mapping(uint256 => Pod) public pods;
 
-    function createpod(
+    function createPod(
         string calldata podId, 
         string calldata podName, 
         address updateAdmin,
@@ -68,11 +68,11 @@ contract Ownership {
     function validateCreatepod(string calldata podId, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
         validatepodParameters(owners, ownershipPercentages);
         Pod memory pod = pods[uint256(keccak256(abi.encodePacked(podId)))];
-        require(pod.createdAt == 0, "pod already exists");
+        require(pod.createdAt == 0, "Pod already exists");
     }
 
     function validateUpdatepod(uint256 createdAt, address updateAdmin, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
-        require(createdAt != 0, "pod does not exist");
+        require(createdAt != 0, "Pod does not exist");
         validatepodParameters(owners, ownershipPercentages);
         require(updateAdmin == msg.sender, "Only updateAdmin contract can update pod");
     }

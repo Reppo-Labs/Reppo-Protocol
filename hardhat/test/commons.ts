@@ -1,87 +1,87 @@
 import { Addressable, ContractTransactionResponse } from "ethers";
 import { Ownership } from "../typechain-types";
 
-export const createRecordType1 = async (
+export const createPodType1 = async (
     ownershipContract: Ownership & { deploymentTransaction(): ContractTransactionResponse; }, 
     ownerAddress: string, 
 ) => {
     const podId = "model01";
-    const podDescription = "model 01 description";
+    const podName = "model 01 description";
     const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
     const owners = [ownerAddress];
     const percentages = [10000n];
-    const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-    await ownershipContract.createRecord(
+    const ip = "ip url";
+    await ownershipContract.createPod(
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
+        ip
     );
     return {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
+        ip,
     }
 }
 
-export const createRecordType2 = async (
+export const createPodType2 = async (
     ownershipContract: Ownership & { deploymentTransaction(): ContractTransactionResponse; }, 
     ownerAddress: string, 
     otherAddress: string,
 ) => {
     const podId = "model01";
-    const podDescription = "model 01 description";
+    const podName = "model 01 description";
     const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
     const owners = [ownerAddress, otherAddress];
     const percentages = [4000n, 6000n];
-    const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-    await ownershipContract.createRecord(
+    const ip = "ip url";
+    await ownershipContract.createPod(
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
+        ip,
     );
     return {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
+        ip,
     }
 }
 
-export const createRecordType3 = async (
+export const createPodType3 = async (
     ownershipContract: Ownership & { deploymentTransaction(): ContractTransactionResponse; }, 
     ownerAddress: string, 
     updateAdmin: string | Addressable,
 ) => {
     const podId = "model01";
-    const podDescription = "model 01 description";
+    const podName = "model 01 description";
     const owners = [ownerAddress];
     const percentages = [10000n];
-    const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-    await ownershipContract.createRecord(
+    const ip = "ip url";
+    await ownershipContract.createPod(
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
+        ip,
     );
     return {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
+        ip,
     }
 }

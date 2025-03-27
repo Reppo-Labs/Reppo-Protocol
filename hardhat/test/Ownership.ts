@@ -2,7 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { createRecordType1, createRecordType2, createRecordType3 } from "./commons";
+import { createPodType1, createPodType2, createPodType3 } from "./commons";
 
 describe("Ownership", function () {
 
@@ -30,118 +30,118 @@ describe("Ownership", function () {
 
   });
 
-  describe("Create record", function () {
+  describe("Create pod", function () {
 
-    it("Can create a record with single owner", async function () {
+    it("Can create a pod with single owner", async function () {
       const { ownership, owner } = await loadFixture(deployOwnership);
       const {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
-      } = await createRecordType1(ownership, owner.address);
-      const record = await ownership.getRecord(podId);
-      expect(record.podId).to.equal(podId);
-      expect(record.podDescription).to.equal(podDescription);
-      expect(record.updateAdmin).to.equal(updateAdmin);
-      expect(record.owners).to.eql(owners);
-      expect(record.ownershipPercentages).to.eql(percentages);
-      expect(record.ipAccountAddresses).to.eql(ipAccountAddresses);
+        ip,
+      } = await createPodType1(ownership, owner.address);
+      const pod = await ownership.getPod(podId);
+      expect(pod.podId).to.equal(podId);
+      expect(pod.podName).to.equal(podName);
+      expect(pod.updateAdmin).to.equal(updateAdmin);
+      expect(pod.owners).to.eql(owners);
+      expect(pod.ownershipPercentages).to.eql(percentages);
+      expect(pod.ip).to.eql(ip);
     });
 
-    it("Can create a record with multiple owners", async function () {
+    it("Can create a pod with multiple owners", async function () {
       const { ownership, owner, otherAccount } = await deployOwnership();
       const {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
-      } = await createRecordType2(ownership, owner.address, otherAccount.address);
-      const record = await ownership.getRecord(podId);
-      expect(record.podId).to.equal(podId);
-      expect(record.podDescription).to.equal(podDescription);
-      expect(record.updateAdmin).to.equal(updateAdmin);
-      expect(record.owners).to.eql(owners);
-      expect(record.ownershipPercentages).to.eql(percentages);
-      expect(record.ipAccountAddresses).to.eql(ipAccountAddresses);
+        ip,
+      } = await createPodType2(ownership, owner.address, otherAccount.address);
+      const pod = await ownership.getPod(podId);
+      expect(pod.podId).to.equal(podId);
+      expect(pod.podName).to.equal(podName);
+      expect(pod.updateAdmin).to.equal(updateAdmin);
+      expect(pod.owners).to.eql(owners);
+      expect(pod.ownershipPercentages).to.eql(percentages);
+      expect(pod.ip).to.eql(ip);
     });
 
-    it ("Throws an error when creating record with invalid percentages", async function () {
+    it ("Throws an error when creating pod with invalid percentages", async function () {
       const { ownership, owner, otherAccount } = await deployOwnership();
       const podId = "model01";
       const description = "model 01 description";
       const multiSigContract = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address, otherAccount.address];
       const percentages = [6000n, 5000n];
-      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-      await expect(ownership.createRecord(
+      const ip = "ip url";
+      await expect(ownership.createPod(
         podId,
         description,
         multiSigContract,
         owners,
         percentages,
-        ipAccountAddresses
+        ip
       )).to.be.revertedWith("Total percentage should be 100");
     });
 
-    it ("Throws an error when creating record with mismatching owners & percentages", async function () {
+    it ("Throws an error when creating pod with mismatching owners & percentages", async function () {
       const { ownership, owner, otherAccount } = await deployOwnership();
       const modelId = "model01";
       const description = "model 01 description";
       const multiSigContract = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address];
       const percentages = [6000n, 4000n];
-      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-      await expect(ownership.createRecord(
+      const ip = " ip url";
+      await expect(ownership.createPod(
         modelId,
         description,
         multiSigContract,
         owners,
         percentages,
-        ipAccountAddresses
+        ip
       )).to.be.revertedWith("Owners and percentages length should be equal");
     });
 
-    it ("Throws an error when creating record with duplicate modelId", async function () {
+    it ("Throws an error when creating pod with duplicate modelId", async function () {
       const { ownership, owner } = await deployOwnership();
       const {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
-      } = await createRecordType1(ownership, owner.address);
-      await expect(ownership.createRecord(
+        ip,
+      } = await createPodType1(ownership, owner.address);
+      await expect(ownership.createPod(
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
-      )).to.be.revertedWith("Record already exists");
+        ip
+      )).to.be.revertedWith("Pod already exists");
     });
 
-    it ("Emits RecordCreated event when record is created", async function () {
+    it ("Emits PodCreated event when pod is created", async function () {
       const { ownership, owner } = await deployOwnership();
       const podId = "model01";
       const description = "model 01 description";
       const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
       const owners = [owner.address];
       const percentages = [10000n];
-      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-      await expect(ownership.createRecord(
+      const ip = " ip url";
+      await expect(ownership.createPod(
         podId,
         description,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
-      )).to.emit(ownership, "RecordCreated").withArgs(
+        ip
+      )).to.emit(ownership, "PodCreated").withArgs(
         podId,
         owner.address,
       );
@@ -149,7 +149,7 @@ describe("Ownership", function () {
 
   });
 
-  describe("Update record", function () {
+  describe("Update pod", function () {
 
     it ("Throws an error when update is called with invalid modelId", async function () {
       const { ownership, owner } = await loadFixture(deployOwnership);
@@ -157,88 +157,88 @@ describe("Ownership", function () {
       const percentages = [10000n];
       const description = "new description";
       const updateAdmin = "0x498B805b14cA0318aB6C7FfFb1fAd80db172780E";
-      const ipAccountAddresses = ["0x498B805b14cA0318aB6C7FfFb1fAd80db172780E"];
-      await expect(ownership.updateRecord(
+      const ip = " ip url";
+      await expect(ownership.updatePod(
         "model01",
         description,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
-      )).to.be.revertedWith("Record does not exist");
+        ip,
+      )).to.be.revertedWith("Pod does not exist");
     });
 
     it("Throws an error when update is called by non-multisig", async function () {
       const { ownership, owner } = await loadFixture(deployOwnership);
       const {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
-      } = await createRecordType1(ownership, owner.address);
+        ip,
+      } = await createPodType1(ownership, owner.address);
       const newDescription: string = "new description";
-      await expect(ownership.connect(owner).updateRecord(
+      await expect(ownership.connect(owner).updatePod(
         podId,
         newDescription,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
-      )).to.be.revertedWith("Only multisig contract can update record");
+        ip
+      )).to.be.revertedWith("Only updateAdmin contract can update pod");
     });
 
-    it("Mulitsig can update a record", async function () {
+    it("Mulitsig can update a pod", async function () {
       const { ownership, owner, otherAccount } = await loadFixture(deployOwnership);
       const { multisig } = await loadFixture(deployMultisig);
       const {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
-      } = await createRecordType3(ownership, owner.address, multisig.target);
+        ip,
+      } = await createPodType3(ownership, owner.address, multisig.target);
       const newDescription = "new description";
       const newOwners = [owner.address, otherAccount.address];
       const newPercentages = [4000n, 6000n];
-      await multisig.updateRecord(
+      await multisig.updatePod(
         podId,
         newDescription,
         updateAdmin,
         newOwners,
         newPercentages,
-        ipAccountAddresses
+        ip
       );
-      const record = await ownership.getRecord(podId);
-      expect(record.podId).to.equal(podId);
-      expect(record.podDescription).to.equal(newDescription);
-      expect(record.updateAdmin).to.equal(updateAdmin);
-      expect(record.owners).to.eql(newOwners);
-      expect(record.ownershipPercentages).to.eql(newPercentages);
+      const pod = await ownership.getPod(podId);
+      expect(pod.podId).to.equal(podId);
+      expect(pod.podName).to.equal(newDescription);
+      expect(pod.updateAdmin).to.equal(updateAdmin);
+      expect(pod.owners).to.eql(newOwners);
+      expect(pod.ownershipPercentages).to.eql(newPercentages);
     });
 
-    it ("Emits RecordUpdated event when record is updated", async function () {
+    it ("Emits PodUpdated event when pod is updated", async function () {
       const { ownership, owner } = await loadFixture(deployOwnership);
       const { multisig } = await loadFixture(deployMultisig);
       const {
         podId,
-        podDescription,
+        podName,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses,
-      } = await createRecordType3(ownership, owner.address, multisig.target);
+        ip,
+      } = await createPodType3(ownership, owner.address, multisig.target);
       const newDescription: string = "new description";
-      await expect(multisig.updateRecord(
+      await expect(multisig.updatePod(
         podId,
         newDescription,
         updateAdmin,
         owners,
         percentages,
-        ipAccountAddresses
-      )).to.emit(ownership, "RecordUpdated").withArgs(
+        ip
+      )).to.emit(ownership, "PodUpdated").withArgs(
         podId,
       );
     });

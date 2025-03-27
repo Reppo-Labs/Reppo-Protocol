@@ -1,83 +1,83 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-// created by reppo labs at 2025-01-25 19:12
+// created by reppo labs at 2025-02-28 01:04
 
 contract Ownership {
 
-    struct Record {
+    struct Pod {
         string podId;
         uint256 createdAt;
         address creator;
         address updateAdmin;
-        string podDescription;
+        string podName;
         address[] owners;
         uint256[] ownershipPercentages;
-        address[] ipAccountAddresses;
+        string ip;
     }
 
-    event RecordCreated(string podId, address creator);
-    event RecordUpdated(string podId);
+    event PodCreated(string podId, address creator);
+    event PodUpdated(string podId);
 
-    mapping(uint256 => Record) public records;
+    mapping(uint256 => Pod) public pods;
 
-    function createRecord(
+    function createpod(
         string calldata podId, 
-        string calldata podDescription, 
+        string calldata podName, 
         address updateAdmin,
         address[] calldata owners,
         uint256[] calldata ownershipPercentages,
-        address[] calldata ipAccountAddresses
+        string calldata ip
     ) public {
-        validateCreateRecord(podId, owners, ownershipPercentages);
-        records[uint256(keccak256(abi.encodePacked(podId)))] = Record({
+        validateCreatepod(podId, owners, ownershipPercentages);
+        pods[uint256(keccak256(abi.encodePacked(podId)))] = Pod({
             podId: podId,
             createdAt: block.timestamp,
             creator: msg.sender,
             updateAdmin: updateAdmin,
-            podDescription: podDescription,
+            podName: podName,
             owners: owners,
             ownershipPercentages: ownershipPercentages,
-            ipAccountAddresses: ipAccountAddresses
+            ip: ip
         });
-        emit RecordCreated(podId, msg.sender);
+        emit PodCreated(podId, msg.sender);
     }
 
-    function updateRecord(
+    function updatePod(
         string calldata podId, 
-        string calldata podDescription,
+        string calldata podName,
         address updateAdmin,
         address[] calldata owners,
         uint256[] calldata ownershipPercentages,
-        address[] calldata ipAccountAddresses
+        string calldata ip
     ) external {
-        Record storage record = records[uint256(keccak256(abi.encodePacked(podId)))];
-        validateUpdateRecord(record.createdAt, record.updateAdmin, owners, ownershipPercentages);
-        record.podDescription = podDescription;
-        record.updateAdmin = updateAdmin;
-        record.owners = owners;
-        record.ownershipPercentages = ownershipPercentages;
-        record.ipAccountAddresses = ipAccountAddresses;
-        emit RecordUpdated(podId);
+        Pod storage pod = pods[uint256(keccak256(abi.encodePacked(podId)))];
+        validateUpdatepod(pod.createdAt, pod.updateAdmin, owners, ownershipPercentages);
+        pod.podName = podName;
+        pod.updateAdmin = updateAdmin;
+        pod.owners = owners;
+        pod.ownershipPercentages = ownershipPercentages;
+        pod.ip = ip;
+        emit PodUpdated(podId);
     }
 
-    function getRecord(string calldata podId) public view returns (Record memory) {
-        return records[uint256(keccak256(abi.encodePacked(podId)))];
+    function getPod(string calldata podId) public view returns (Pod memory) {
+        return pods[uint256(keccak256(abi.encodePacked(podId)))];
     }
 
-    function validateCreateRecord(string calldata podId, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
-        validateRecordParameters(owners, ownershipPercentages);
-        Record memory record = records[uint256(keccak256(abi.encodePacked(podId)))];
-        require(record.createdAt == 0, "Record already exists");
+    function validateCreatepod(string calldata podId, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
+        validatepodParameters(owners, ownershipPercentages);
+        Pod memory pod = pods[uint256(keccak256(abi.encodePacked(podId)))];
+        require(pod.createdAt == 0, "pod already exists");
     }
 
-    function validateUpdateRecord(uint256 createdAt, address multisig, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
-        require(createdAt != 0, "Record does not exist");
-        validateRecordParameters(owners, ownershipPercentages);
-        require(multisig == msg.sender, "Only multisig contract can update record");
+    function validateUpdatepod(uint256 createdAt, address updateAdmin, address[] calldata owners, uint256[] calldata ownershipPercentages) internal view {
+        require(createdAt != 0, "pod does not exist");
+        validatepodParameters(owners, ownershipPercentages);
+        require(updateAdmin == msg.sender, "Only updateAdmin contract can update pod");
     }
 
-    function validateRecordParameters(address[] calldata owners, uint256[] calldata ownershipPercentages) internal pure {
+    function validatepodParameters(address[] calldata owners, uint256[] calldata ownershipPercentages) internal pure {
         require(owners.length == ownershipPercentages.length, "Owners and percentages length should be equal");
         uint256 totalPercentage = 0;
         for (uint256 i = 0; i < owners.length; i++) {

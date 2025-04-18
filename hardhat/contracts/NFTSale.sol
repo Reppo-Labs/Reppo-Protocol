@@ -5,8 +5,9 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract NFTSale is Ownable, Pausable, ReentrancyGuard {
+contract NFTSale is Ownable, Pausable, ReentrancyGuard, IERC721Receiver {
 
     IERC721 public premiumCollection;
     IERC721 public standardCollection;
@@ -18,6 +19,7 @@ contract NFTSale is Ownable, Pausable, ReentrancyGuard {
     constructor(address initialOwner) 
         Ownable(initialOwner)
     {}
+
 
     function setPremiumCollection(address _premiumCollection, uint256 tokenId) external onlyOwner {
         premiumCollection = IERC721(_premiumCollection);
@@ -76,6 +78,15 @@ contract NFTSale is Ownable, Pausable, ReentrancyGuard {
 
     function resumeSale() public onlyOwner {
         _unpause();
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
 }

@@ -9,9 +9,9 @@ import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Rec
 
 contract NFTSale is Ownable, Pausable, ReentrancyGuard, IERC721Receiver {
 
-    IERC721 public premiumCollection;
+    IERC721 public premiumNFTCollection;
     uint256 public premiumNFTCollectionSize;
-    IERC721 public standardCollection;
+    IERC721 public standardNFTCollection;
     uint256 public standardNFTCollectionSize;
     uint256 public constant PREMIUM_PRICE = 0.02 ether;
     uint256 public constant STANDARD_PRICE = 0.01 ether;
@@ -24,18 +24,18 @@ contract NFTSale is Ownable, Pausable, ReentrancyGuard, IERC721Receiver {
     {}
 
     function setPremiumCollection(address collection, uint256 collectionSize) external onlyOwner {
-        premiumCollection = IERC721(collection);
+        premiumNFTCollection = IERC721(collection);
         premiumNFTCollectionSize = collectionSize;
     }
 
     function setStandardCollection(address collection, uint256 collectionSize) external onlyOwner {
-        standardCollection = IERC721(collection);
+        standardNFTCollection = IERC721(collection);
         standardNFTCollectionSize = collectionSize;
     }
 
     function getCurrentPremiumNFTId() public view returns (uint256) {
         for (uint256 i = 0; i < premiumNFTCollectionSize; i++) {
-            if (premiumCollection.ownerOf(i) == address(this)) {
+            if (premiumNFTCollection.ownerOf(i) == address(this)) {
                 return i;
             }
         }
@@ -44,7 +44,7 @@ contract NFTSale is Ownable, Pausable, ReentrancyGuard, IERC721Receiver {
 
     function getCurrentStandardNFTId() public view returns (uint256) {
         for (uint256 i = 0; i < standardNFTCollectionSize; i++) {
-            if (standardCollection.ownerOf(i) == address(this)) {
+            if (standardNFTCollection.ownerOf(i) == address(this)) {
                 return i;
             }
         }
@@ -54,14 +54,14 @@ contract NFTSale is Ownable, Pausable, ReentrancyGuard, IERC721Receiver {
     function buyPremiumNFT() external payable whenNotPaused nonReentrant {
         require(msg.value == PREMIUM_PRICE, "Incorrect Ether sent");
         uint256 nftId = getCurrentPremiumNFTId();
-        premiumCollection.safeTransferFrom(address(this), msg.sender, nftId);
+        premiumNFTCollection.safeTransferFrom(address(this), msg.sender, nftId);
         emit PremiumNFTPurchased(msg.sender, nftId);
     }
 
     function buyStandardNFT() external payable whenNotPaused nonReentrant {
         require(msg.value == STANDARD_PRICE, "Incorrect Ether sent");
         uint256 nftId = getCurrentStandardNFTId();
-        standardCollection.safeTransferFrom(address(this), msg.sender, nftId);
+        standardNFTCollection.safeTransferFrom(address(this), msg.sender, nftId);
         emit StandardNFTPurchased(msg.sender, nftId);
     }
 
@@ -75,13 +75,13 @@ contract NFTSale is Ownable, Pausable, ReentrancyGuard, IERC721Receiver {
 
     function withdrawAllNFTs() external onlyOwner {
         for (uint256 i = 0; i < premiumNFTCollectionSize; i++) {
-            if (premiumCollection.ownerOf(i) == address(this)) {
-                premiumCollection.safeTransferFrom(address(this), owner(), i);
+            if (premiumNFTCollection.ownerOf(i) == address(this)) {
+                premiumNFTCollection.safeTransferFrom(address(this), owner(), i);
             }
         }
         for (uint256 i = 0; i < standardNFTCollectionSize; i++) {
-            if (standardCollection.ownerOf(i) == address(this)) {
-                standardCollection.safeTransferFrom(address(this), owner(), i);
+            if (standardNFTCollection.ownerOf(i) == address(this)) {
+                standardNFTCollection.safeTransferFrom(address(this), owner(), i);
             }
         }
     }

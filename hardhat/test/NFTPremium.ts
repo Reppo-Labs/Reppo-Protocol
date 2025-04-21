@@ -1,4 +1,4 @@
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
 
@@ -61,6 +61,16 @@ describe("NFT Premium Collection", function () {
       await expect(nftPremium.connect(otherAccount).transferFrom(owner.address, otherAccount.address, 1)).to.be.revertedWith("Transfer not allowed yet");
     });
 
+    it ("Can transfer after transfer allowed timestamp", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.safeMint(owner.address, { value: mintPrice });
+      await time.setNextBlockTimestamp(transferEnabledAfter + 1);
+      await nftPremium.transferFrom(owner.address, otherAccount.address, 1);
+      expect(await nftPremium.balanceOf(otherAccount.address)).to.equal(1);
+      expect(await nftPremium.balanceOf(owner.address)).to.equal(0);
+      expect(await nftPremium.ownerOf(1)).to.equal(otherAccount.address);
+    });
+    
   });
 
 });

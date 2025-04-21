@@ -9,23 +9,26 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 
 contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
-    uint256 private _nextTokenId;
+    uint256 private _currentTokenId = 1;
     uint256 private _maxSupply = 5550;
     string private _metadataBaseURI = "https://ipfs.io/ipfs/bafybeiglrj662izfl6oniqvpekgrgdy3kthuh7w2vfeupmnjvp4pb2dyii/";
-    uint256 public constant PREMIUM_PRICE = 0.22 ether;
+    uint256 public constant MINT_FEE = 0.22 ether;
+    uint256 public transferEnabledAfter;
 
-    constructor(address initialOwner)
-        ERC721("Reppo Premuim", "REPPOP")
+    constructor(address initialOwner, uint256 _transferEnabledAfter)
+        ERC721("Reppo Premium", "REPPOP")
         Ownable(initialOwner)
-    {}
+    {
+        transferEnabledAfter = _transferEnabledAfter;
+    }
 
-    function safeMintTo(address to) public payable whenNotPaused nonReentrant {
-        require(_nextTokenId < _maxSupply, "Max supply reached");
-        require(msg.value == PREMIUM_PRICE, "Incorrect Ether sent");
-        uint256 tokenId = _nextTokenId++;
-        string memory metadataURI = formatMetadataURI(tokenId);
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, metadataURI);
+    function safeMint(address to) public payable whenNotPaused nonReentrant {
+        require(_currentTokenId <= _maxSupply, "Max supply reached");
+        require(msg.value == MINT_FEE, "Incorrect Ether sent");
+        string memory metadataURI = formatMetadataURI(_currentTokenId);
+        _safeMint(to, _currentTokenId);
+        _setTokenURI(_currentTokenId, metadataURI);
+        _currentTokenId++;
     } 
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {
@@ -44,6 +47,10 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         _unpause();
     }
 
+    function setTransferEnabledAfter(uint256 _transferEnabledAfter) public onlyOwner {
+        transferEnabledAfter = _transferEnabledAfter;
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _update(address to, uint256 tokenId, address auth)
@@ -51,6 +58,11 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         override(ERC721, ERC721Pausable)
         returns (address)
     {
+        address from = _ownerOf(tokenId);
+        bool isMint = from == address(0);
+        if (!isMint) {
+            require(block.timestamp > transferEnabledAfter, "Transfer not allowed yet");
+        }
         return super._update(to, tokenId, auth);
     }
 

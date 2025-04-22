@@ -45,9 +45,9 @@ describe("NFT Premium Collection", function () {
     return { nftPremium, owner, otherAccount, nftGenesis: nftGenesis.target };
   }
 
-  describe ("Premium NFT Collection", function () {
+  describe ("Parameters", function () {
 
-    it ("Can deploy Premium NFT Collection contract with correct constructor parameters", async function () {
+    it ("Has correct constructor parameters", async function () {
       const [owner, otherAccount] = await hre.ethers.getSigners();
       const { nftPremium, nftGenesis } = await loadFixture(deployPremiumNFTCollection);
       expect(await nftPremium.name()).to.equal(name);
@@ -63,6 +63,10 @@ describe("NFT Premium Collection", function () {
       expect(await nftPremium.mintFee()).to.equal(mintFee);
       expect(await nftPremium.discountedMintFee()).to.equal(discountedMintFee);
     });
+
+  });
+
+  describe ("Minting", function () {
 
     it ("Throws an error when trying to mint a NFT with incorrect ether amount", async function () {
       const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
@@ -90,6 +94,10 @@ describe("NFT Premium Collection", function () {
       expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(discountedMintFee);
       expect(await nftPremium.ownerOf(1)).to.equal(owner.address);
     });
+    
+  });
+
+  describe ("Transfering", function () {
 
     it ("Cannot transfer NFTs before transferEnabledAfter", async function () {
       const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
@@ -106,11 +114,24 @@ describe("NFT Premium Collection", function () {
       expect(await nftPremium.balanceOf(owner.address)).to.equal(0);
       expect(await nftPremium.ownerOf(1)).to.equal(otherAccount.address);
     });
+    
+  });
+
+  describe ("Withdrawing", function () {
 
     it ("Non owner cannot withdraw ETH from contract", async function () {
       const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
       await nftPremium.safeMint(otherAccount.address, { value: mintFee });
       await expect(nftPremium.connect(otherAccount).withdraw()).to.be.revertedWithCustomError(nftPremium, "OwnableUnauthorizedAccount");
+    });
+
+    it ("Owner can withdraw ETH from contract", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.safeMint(otherAccount.address, { value: mintFee });
+      const initialBalance = await hre.ethers.provider.getBalance(owner.address);
+      await nftPremium.withdraw();
+      const finalBalance = await hre.ethers.provider.getBalance(owner.address);
+      expect(finalBalance).to.be.greaterThan(initialBalance);
     });
     
   });

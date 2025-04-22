@@ -18,8 +18,13 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
     uint256 public claimsCapId;
     string public metadataBaseURI;
     uint256 public mintFee;
+    uint256 public discountedMintFee;
     uint256 public transferEnabledAfter;
     mapping(uint256 => bool) public claims;
+    mapping(address => bool) public whitelist;
+
+    event Minted(address indexed to, uint256 tokenId, bool whitelisted);
+    event Claimed(address indexed to, uint256 tokenId);
 
     constructor(
         string memory name,
@@ -32,6 +37,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         uint256 _claimsCapId,
         string memory _metadataBaseURI,
         uint256 _mintFee,
+        uint256 _discountedMintFee,
         uint256 _transferEnabledAfter
     )
         ERC721(name, symbol)
@@ -44,16 +50,20 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         claimsCapId = _claimsCapId;
         metadataBaseURI = _metadataBaseURI;
         mintFee = _mintFee;
+        discountedMintFee = _discountedMintFee;
         transferEnabledAfter = _transferEnabledAfter;
     }
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
-        require(msg.value == mintFee, "Incorrect Ether sent");
+        bool isWhitelisted = whitelist[msg.sender];
+        uint256 mintFeeToPay = isWhitelisted ? discountedMintFee : mintFee;
+        require(msg.value == mintFeeToPay, "Incorrect Ether sent");
         string memory metadataURI = formatMetadataURI(currentMintTokenId);
         _safeMint(to, currentMintTokenId);
         _setTokenURI(currentMintTokenId, metadataURI);
         currentMintTokenId++;
+        emit Minted(to, currentMintTokenId - 1, isWhitelisted);
     }
 
     function safeClaim(address to, uint256 genesisTokenId) public whenNotPaused nonReentrant {
@@ -65,6 +75,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         _setTokenURI(currentClaimTokenId, metadataURI);
         claims[genesisTokenId] = true;
         currentClaimTokenId++;
+        emit Claimed(to, currentClaimTokenId - 1);
     }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {
@@ -95,12 +106,32 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         mintFee = newMintFee;
     }
 
+    function setDiscountedMintFee(uint256 newDiscountedMintFee) public onlyOwner {
+        discountedMintFee = newDiscountedMintFee;
+    }
+
     function setTransferEnabledAfter(uint256 _transferEnabledAfter) public onlyOwner {
         transferEnabledAfter = _transferEnabledAfter;
     }
 
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
+    }
+
+    function setGenesisCollection(address _genesisCollection) public onlyOwner {
+        genesisCollection = IERC721(_genesisCollection);
+    }
+
+    function setWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            whitelist[addresses[i]] = true;
+        }
+    }
+
+    function removeWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            whitelist[addresses[i]] = false;
+        }
     }
 
     function pause() public onlyOwner {

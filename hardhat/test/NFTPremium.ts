@@ -2,27 +2,66 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { premiumCollectionMetadataBaseURI } from "../constants/nftCollection";
+
 describe("NFT Premium Collection", function () {
 
+  const name = "Reppo Premium";
+  const symbol = "REPPOP";
+  const currentMintTokenId = 1;
+  const mintCapId = 10;
+  const currentClaimTokenId = 11;
+  const claimsCapId = 15;
+  const metadataBaseURI = premiumCollectionMetadataBaseURI;
+  const mintFee = hre.ethers.parseEther("0.22");
+  const discountedMintFee = hre.ethers.parseEther("0.20");
   const transferEnabledAfter = 	1747786226;
-  const mintPrice = hre.ethers.parseEther("0.22");
+
+  async function deployGenesisNFTCollection() {
+    const [owner, otherAccount] = await hre.ethers.getSigners();
+    const NFTGenesis = await hre.ethers.getContractFactory("NFT");
+    const nftGenesis = await NFTGenesis.deploy(owner.address, "Reppo Genesis", "REPPG");
+    return { nftGenesis, owner, otherAccount };
+  }
 
   async function deployPremiumNFTCollection() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
     const NFT = await hre.ethers.getContractFactory("NFTPremiumCollection");
-    const nftPremium = await NFT.deploy(owner.address, transferEnabledAfter);
-    return { nftPremium, owner, otherAccount };
+    const { nftGenesis } = await loadFixture(deployGenesisNFTCollection);
+    const nftPremium = await NFT.deploy(
+      name,
+      symbol,
+      owner,
+      nftGenesis.target,
+      currentMintTokenId,
+      mintCapId,
+      currentClaimTokenId,
+      claimsCapId,
+      metadataBaseURI,
+      mintFee,
+      discountedMintFee,
+      transferEnabledAfter
+    );
+    return { nftPremium, owner, otherAccount, nftGenesis: nftGenesis.target };
   }
 
   describe ("Premium NFT Collection", function () {
 
     it ("Can deploy Premium NFT Collection contract with correct constructor parameters", async function () {
       const [owner, otherAccount] = await hre.ethers.getSigners();
-      const { nftPremium } = await loadFixture(deployPremiumNFTCollection);
+      const { nftPremium, nftGenesis } = await loadFixture(deployPremiumNFTCollection);
+      expect(await nftPremium.name()).to.equal(name);
+      expect(await nftPremium.symbol()).to.equal(symbol);
       expect(await nftPremium.owner()).to.equal(owner.address);
+      expect(await nftPremium.genesisCollection()).to.equal(nftGenesis);
       expect(await nftPremium.transferEnabledAfter()).to.equal(transferEnabledAfter);
-      expect(await nftPremium.name()).to.equal("Reppo Premium");
-      expect(await nftPremium.symbol()).to.equal("REPPOP");
+      expect(await nftPremium.mintCapId()).to.equal(mintCapId);
+      expect(await nftPremium.currentMintTokenId()).to.equal(currentMintTokenId);
+      expect(await nftPremium.currentClaimTokenId()).to.equal(currentClaimTokenId);
+      expect(await nftPremium.claimsCapId()).to.equal(claimsCapId);
+      expect(await nftPremium.metadataBaseURI()).to.equal(metadataBaseURI);
+      expect(await nftPremium.mintFee()).to.equal(mintFee);
+      expect(await nftPremium.discountedMintFee()).to.equal(discountedMintFee);
     });
 
     it ("Throws an error when trying to mint a NFT with incorrect ether amount", async function () {

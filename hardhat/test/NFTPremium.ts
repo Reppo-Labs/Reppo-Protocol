@@ -14,7 +14,7 @@ describe("NFT Premium Collection", function () {
     return { nftPremium, owner, otherAccount };
   }
 
-  describe ("Deploy Premium NFT Collection", function () {
+  describe ("Premium NFT Collection", function () {
 
     it ("Can deploy Premium NFT Collection contract with correct constructor parameters", async function () {
       const [owner, otherAccount] = await hre.ethers.getSigners();
@@ -69,6 +69,13 @@ describe("NFT Premium Collection", function () {
       expect(await nftPremium.balanceOf(otherAccount.address)).to.equal(1);
       expect(await nftPremium.balanceOf(owner.address)).to.equal(0);
       expect(await nftPremium.ownerOf(1)).to.equal(otherAccount.address);
+    });
+
+    it ("Non owner cannot withdraw ETH from contract", async function () {
+      const { nftPremium, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.safeMint(otherAccount.address, { value: mintPrice });
+      await nftPremium.connect(otherAccount).withdraw();
+      // await expect(nftPremium.connect(otherAccount).withdraw()).to.be.revertedWith("OwnableUnauthorizedAccount");
     });
     
   });

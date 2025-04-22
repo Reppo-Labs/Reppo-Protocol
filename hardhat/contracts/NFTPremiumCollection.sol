@@ -1,54 +1,114 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ERC721Pausable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import { ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
-    uint256 private _currentTokenId = 1;
-    uint256 private _maxSupply = 5550;
-    string private _metadataBaseURI = "https://ipfs.io/ipfs/bafybeiglrj662izfl6oniqvpekgrgdy3kthuh7w2vfeupmnjvp4pb2dyii/";
-    uint256 public constant MINT_FEE = 0.22 ether;
+    IERC721 public genesisCollection;
+    uint256 public currentMintTokenId;
+    uint256 public mintCapId;
+    uint256 public currentClaimTokenId;
+    uint256 public claimsCapId;
+    string public metadataBaseURI;
+    uint256 public mintFee;
     uint256 public transferEnabledAfter;
+    mapping(uint256 => bool) public claims;
 
-    constructor(address initialOwner, uint256 _transferEnabledAfter)
-        ERC721("Reppo Premium", "REPPOP")
+    constructor(
+        string memory name,
+        string memory symbol,
+        address initialOwner,
+        address _genesisCollection,
+        uint256 _currentMintTokenId,
+        uint256 _mintCapId,
+        uint256 _currentClaimTokenId,
+        uint256 _claimsCapId,
+        string memory _metadataBaseURI,
+        uint256 _mintFee,
+        uint256 _transferEnabledAfter
+    )
+        ERC721(name, symbol)
         Ownable(initialOwner)
     {
+        genesisCollection = IERC721(_genesisCollection);
+        currentMintTokenId = _currentMintTokenId;
+        mintCapId = _mintCapId;
+        currentClaimTokenId = _currentClaimTokenId;
+        claimsCapId = _claimsCapId;
+        metadataBaseURI = _metadataBaseURI;
+        mintFee = _mintFee;
         transferEnabledAfter = _transferEnabledAfter;
     }
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {
-        require(_currentTokenId <= _maxSupply, "Max supply reached");
-        require(msg.value == MINT_FEE, "Incorrect Ether sent");
-        string memory metadataURI = formatMetadataURI(_currentTokenId);
-        _safeMint(to, _currentTokenId);
-        _setTokenURI(_currentTokenId, metadataURI);
-        _currentTokenId++;
-    } 
+        require(currentMintTokenId <= mintCapId, "Max supply reached");
+        require(msg.value == mintFee, "Incorrect Ether sent");
+        string memory metadataURI = formatMetadataURI(currentMintTokenId);
+        _safeMint(to, currentMintTokenId);
+        _setTokenURI(currentMintTokenId, metadataURI);
+        currentMintTokenId++;
+    }
+
+    function safeClaim(address to, uint256 genesisTokenId) public whenNotPaused nonReentrant {
+        require(currentClaimTokenId <= claimsCapId, "Max supply reached");
+        require(genesisCollection.ownerOf(genesisTokenId) == msg.sender, "Not the owner of the genesis token");
+        require(!claims[genesisTokenId], "Token already claimed");
+        string memory metadataURI = formatMetadataURI(currentClaimTokenId);
+        _safeMint(to, currentClaimTokenId);
+        _setTokenURI(currentClaimTokenId, metadataURI);
+        claims[genesisTokenId] = true;
+        currentClaimTokenId++;
+    }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {
-        return string(abi.encodePacked(_metadataBaseURI, tokenId, ".json"));
+        return string(abi.encodePacked(metadataBaseURI, Strings.toString(tokenId), ".json"));
     }
 
     function setBaseURI(string memory newBaseURI) public onlyOwner {
-        _metadataBaseURI = newBaseURI;
+        metadataBaseURI = newBaseURI;
     }
 
-        function pause() public onlyOwner {
+    function setCurrentMintTokenId(uint256 newCurrentMintTokenId) public onlyOwner {
+        currentMintTokenId = newCurrentMintTokenId;
+    }
+
+    function setMintCapId(uint256 newMintCapId) public onlyOwner {
+        mintCapId = newMintCapId;
+    }
+
+    function setCurrentClaimTokenId(uint256 newCurrentClaimTokenId) public onlyOwner {
+        currentClaimTokenId = newCurrentClaimTokenId;
+    }
+
+    function setClaimsCapId(uint256 newClaimsCapId) public onlyOwner {
+        claimsCapId = newClaimsCapId;
+    }
+
+    function setMintFee(uint256 newMintFee) public onlyOwner {
+        mintFee = newMintFee;
+    }
+
+    function setTransferEnabledAfter(uint256 _transferEnabledAfter) public onlyOwner {
+        transferEnabledAfter = _transferEnabledAfter;
+    }
+
+    function withdraw() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    function pause() public onlyOwner {
         _pause();
     }
 
     function unpause() public onlyOwner {
         _unpause();
-    }
-
-    function setTransferEnabledAfter(uint256 _transferEnabledAfter) public onlyOwner {
-        transferEnabledAfter = _transferEnabledAfter;
     }
 
     // The following functions are overrides required by Solidity.

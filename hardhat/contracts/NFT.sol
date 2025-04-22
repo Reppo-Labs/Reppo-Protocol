@@ -7,7 +7,7 @@ import { ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extension
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract NFT is ERC721, ERC721URIStorage, ERC721Pausable, Ownable {
-    uint256 private _nextTokenId;
+    uint256 private _nextTokenId = 1;
 
     constructor(address initialOwner, string memory name, string memory symbol)
         ERC721(name, symbol)

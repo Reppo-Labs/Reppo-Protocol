@@ -9,9 +9,11 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
+import "hardhat/console.sol";
+
 contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
-    IERC721 public genesisCollection;
+    address public genesisCollection;
     uint256 public currentMintTokenId;
     uint256 public mintCapId;
     uint256 public currentClaimTokenId;
@@ -43,7 +45,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         ERC721(name, symbol)
         Ownable(initialOwner)
     {
-        genesisCollection = IERC721(_genesisCollection);
+        genesisCollection = _genesisCollection;
         currentMintTokenId = _currentMintTokenId;
         mintCapId = _mintCapId;
         currentClaimTokenId = _currentClaimTokenId;
@@ -66,9 +68,9 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         emit Minted(to, currentMintTokenId - 1, isWhitelisted);
     }
 
-    function safeClaim(address to, uint256 genesisTokenId) public whenNotPaused nonReentrant {
+    function safeClaim(address to, uint256 genesisTokenId) public {
         require(currentClaimTokenId <= claimsCapId, "Max supply reached");
-        require(genesisCollection.ownerOf(genesisTokenId) == msg.sender, "Not the owner of the genesis token");
+        require(IERC721(genesisCollection).ownerOf(genesisTokenId) == msg.sender, "Not the owner of the genesis token");
         require(!claims[genesisTokenId], "Token already claimed");
         string memory metadataURI = formatMetadataURI(currentClaimTokenId);
         _safeMint(to, currentClaimTokenId);
@@ -119,7 +121,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
     }
 
     function setGenesisCollection(address _genesisCollection) public onlyOwner {
-        genesisCollection = IERC721(_genesisCollection);
+        genesisCollection = _genesisCollection;
     }
 
     function addToWhitelist(address[] memory addresses) public onlyOwner {

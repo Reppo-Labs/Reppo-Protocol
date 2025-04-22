@@ -42,7 +42,7 @@ describe("NFT Premium Collection", function () {
       discountedMintFee,
       transferEnabledAfter
     );
-    return { nftPremium, owner, otherAccount, nftGenesis: nftGenesis.target };
+    return { nftPremium, owner, otherAccount, nftGenesis: nftGenesis.target, nftGenesisContract: nftGenesis };
   }
 
   describe ("Parameters", function () {
@@ -94,6 +94,15 @@ describe("NFT Premium Collection", function () {
       expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(discountedMintFee);
       expect(await nftPremium.ownerOf(1)).to.equal(owner.address);
     });
+
+    it ("Can mint up to max allowed NFT mints", async function () {
+      const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
+      for (let i = 0; i < mintCapId; i++) {
+        await nftPremium.safeMint(owner.address, { value: mintFee });
+      }
+      expect(await nftPremium.balanceOf(owner.address)).to.equal(mintCapId);
+      await expect(nftPremium.safeMint(owner.address, { value: mintFee })).to.be.revertedWith("Max supply reached");
+    });
     
   });
 
@@ -133,6 +142,51 @@ describe("NFT Premium Collection", function () {
       const finalBalance = await hre.ethers.provider.getBalance(owner.address);
       expect(finalBalance).to.be.greaterThan(initialBalance);
     });
+    
+  });
+
+  describe ("Claims", function () {
+
+    it ("User without a genesis token cannot claim NFT", async function () {
+      const { nftPremium, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftGenesisContract.safeMint(otherAccount.address, 'uri');
+      expect(await nftGenesisContract.balanceOf(otherAccount.address)).to.equal(1);
+      expect(await nftGenesisContract.ownerOf(1)).to.equal(otherAccount.address);
+      await expect(nftPremium.safeClaim(owner.address, 1)).to.be.revertedWith("Not the owner of the genesis token");
+    });
+
+    it ("User with a genesis token can claim NFT", async function () {
+      const { nftPremium, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
+      expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
+      await nftPremium.safeClaim(owner.address, 1);
+      expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
+      expect(await nftPremium.ownerOf(currentClaimTokenId)).to.equal(owner.address);
+    });
+
+    it ("Same genesis NFT can not be used to claim repeatedly", async function () {
+      const { nftPremium, owner, nftGenesisContract } = await loadFixture(deployPremiumNFTCollection);
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
+      expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
+      await nftPremium.safeClaim(owner.address, 1);
+      expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
+      expect(await nftPremium.ownerOf(currentClaimTokenId)).to.equal(owner.address);
+      await expect(nftPremium.safeClaim(owner.address, 1)).to.be.revertedWith("Token already claimed");
+    });
+
+    it ("Can claim up to max allowed NFT claims", async function () {
+      const { nftPremium, owner, nftGenesisContract } = await loadFixture(deployPremiumNFTCollection);
+      for (let i = currentClaimTokenId; i <= claimsCapId; i++) {
+        await nftGenesisContract.safeMint(owner.address, 'uri');
+        await nftPremium.safeClaim(owner.address, i - currentClaimTokenId + 1);
+        expect(await nftPremium.balanceOf(owner.address)).to.equal(i - currentClaimTokenId + 1);
+        expect(await nftPremium.ownerOf(i)).to.equal(owner.address);
+      }
+      await expect(nftPremium.safeClaim(owner.address, claimsCapId)).to.be.revertedWith("Max supply reached");
+    });
+
     
   });
 

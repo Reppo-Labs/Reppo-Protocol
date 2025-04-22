@@ -69,40 +69,37 @@ describe("NFT Premium Collection", function () {
       await expect(nftPremium.safeMint(owner.address, { value: hre.ethers.parseEther("0.01") })).to.be.revertedWith("Incorrect Ether sent");
     });
 
-    it ("Owner can mint a NFT with correct ether amount", async function () {
+    it ("Non whitelisted user can mint a NFT with standard minting fee", async function () {
       const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.safeMint(owner.address, { value: mintPrice });
+      await nftPremium.safeMint(owner.address, { value: mintFee });
       expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
-      expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(mintPrice);
+      expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(mintFee);
       expect(await nftPremium.ownerOf(1)).to.equal(owner.address);
     });
 
-    it ("Non-owner can mint a NFT", async function () {
-      const { nftPremium, otherAccount } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.connect(otherAccount).safeMint(otherAccount.address, { value: mintPrice });
-      expect(await nftPremium.balanceOf(otherAccount.address)).to.equal(1);
-      expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(mintPrice);
-      expect(await nftPremium.ownerOf(1)).to.equal(otherAccount.address);
-    });
-
-    it ("Can mint multiple NFTs", async function () {
+    it ("Throws an error when a non whitelisted user trying to mint a NFT with discounted minting fee", async function () {
       const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.safeMint(owner.address, { value: mintPrice });
-      await nftPremium.safeMint(owner.address, { value: mintPrice });
-      expect(await nftPremium.balanceOf(owner.address)).to.equal(2);
+      await expect(nftPremium.safeMint(owner.address, { value: discountedMintFee })).to.be.revertedWith("Incorrect Ether sent");
+    });
+
+    it ("Whitelisted user can mint a NFT with discounted minting fee", async function () {
+      const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.addToWhitelist([owner.address]);
+      await nftPremium.safeMint(owner.address, { value: discountedMintFee });
+      expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
+      expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(discountedMintFee);
       expect(await nftPremium.ownerOf(1)).to.equal(owner.address);
-      expect(await nftPremium.ownerOf(2)).to.equal(owner.address);
     });
 
     it ("Cannot transfer NFTs before transferEnabledAfter", async function () {
       const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.safeMint(owner.address, { value: mintPrice });
+      await nftPremium.safeMint(owner.address, { value: mintFee });
       await expect(nftPremium.connect(otherAccount).transferFrom(owner.address, otherAccount.address, 1)).to.be.revertedWith("Transfer not allowed yet");
     });
 
     it ("Can transfer after transfer allowed timestamp", async function () {
       const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.safeMint(owner.address, { value: mintPrice });
+      await nftPremium.safeMint(owner.address, { value: mintFee });
       await time.setNextBlockTimestamp(transferEnabledAfter + 1);
       await nftPremium.transferFrom(owner.address, otherAccount.address, 1);
       expect(await nftPremium.balanceOf(otherAccount.address)).to.equal(1);
@@ -111,10 +108,9 @@ describe("NFT Premium Collection", function () {
     });
 
     it ("Non owner cannot withdraw ETH from contract", async function () {
-      const { nftPremium, otherAccount } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.safeMint(otherAccount.address, { value: mintPrice });
-      await nftPremium.connect(otherAccount).withdraw();
-      // await expect(nftPremium.connect(otherAccount).withdraw()).to.be.revertedWith("OwnableUnauthorizedAccount");
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.safeMint(otherAccount.address, { value: mintFee });
+      await expect(nftPremium.connect(otherAccount).withdraw()).to.be.revertedWithCustomError(nftPremium, "OwnableUnauthorizedAccount");
     });
     
   });

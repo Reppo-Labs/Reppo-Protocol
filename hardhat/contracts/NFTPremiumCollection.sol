@@ -122,13 +122,13 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         genesisCollection = IERC721(_genesisCollection);
     }
 
-    function setWhitelist(address[] memory addresses) public onlyOwner {
+    function addToWhitelist(address[] memory addresses) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
             whitelist[addresses[i]] = true;
         }
     }
 
-    function removeWhitelist(address[] memory addresses) public onlyOwner {
+    function removeFromWhitelist(address[] memory addresses) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
             whitelist[addresses[i]] = false;
         }

@@ -11,6 +11,6 @@ const NFTModule = buildModule("NFTModule", (m) => {
 
 export default NFTModule;
 
-// 0x4a3bAB10eD2eD2Ec7f740A4a36dEC89D3a4bd63c
-// npx hardhat ignition deploy ignition/modules/NFT.ts --network base-sepolia --deployment-id nft-base-sepolia-v2
-// npx hardhat ignition verify nft-base-sepolia-v2
+// 0x1ee88697274DE93af153f15AD6d8d9948f7E9E98
+// npx hardhat ignition deploy ignition/modules/NFT.ts --network base-sepolia --deployment-id nft-base-sepolia-v3
+// npx hardhat ignition verify nft-base-sepolia-v3

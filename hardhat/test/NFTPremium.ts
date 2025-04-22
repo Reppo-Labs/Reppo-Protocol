@@ -163,6 +163,7 @@ describe("NFT Premium Collection", function () {
       await nftPremium.safeClaim(owner.address, 1);
       expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
       expect(await nftPremium.ownerOf(currentClaimTokenId)).to.equal(owner.address);
+      expect(await nftPremium.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}${currentClaimTokenId}.json`);
     });
 
     it ("Same genesis NFT can not be used to claim repeatedly", async function () {
@@ -187,6 +188,19 @@ describe("NFT Premium Collection", function () {
       await expect(nftPremium.safeClaim(owner.address, claimsCapId)).to.be.revertedWith("Max supply reached");
     });
 
+    it ("After claiming, transferring the genesis token to another address, does not allow to claim again", async function () {
+      const { nftPremium, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
+      expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
+      await nftPremium.safeClaim(owner.address, 1);
+      expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
+      expect(await nftPremium.ownerOf(currentClaimTokenId)).to.equal(owner.address);
+      await nftGenesisContract.transferFrom(owner.address, otherAccount.address, 1);
+      expect(await nftGenesisContract.balanceOf(otherAccount.address)).to.equal(1);
+      expect(await nftGenesisContract.ownerOf(1)).to.equal(otherAccount.address);
+      await expect(nftPremium.connect(otherAccount).safeClaim(otherAccount.address, 1)).to.be.revertedWith("Token already claimed");
+    });
     
   });
 

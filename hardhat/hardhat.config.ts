@@ -6,7 +6,16 @@ const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY as string;
 const WALLET_KEY = process.env.WALLET_KEY as string;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.28",
+  solidity: {
+    version: "0.8.28",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      },
+      viaIR: true,
+    }
+  },
   networks: {
     'base-mainnet': {
       url: 'https://mainnet.base.org',

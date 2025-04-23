@@ -68,7 +68,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         emit Minted(to, currentMintTokenId - 1, isWhitelisted);
     }
 
-    function safeClaim(address to, uint256 genesisTokenId) public {
+    function safeClaim(address to, uint256 genesisTokenId) public whenNotPaused nonReentrant{
         require(currentClaimTokenId <= claimsCapId, "Max supply reached");
         require(IERC721(genesisCollection).ownerOf(genesisTokenId) == msg.sender, "Not the owner of the genesis token");
         require(!claims[genesisTokenId], "Token already claimed");

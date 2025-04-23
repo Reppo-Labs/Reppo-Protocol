@@ -1,3 +1,3 @@
-# Reppo-Protocol
+Reppo enables developers, AI agents, and Physical AI to consume data, infra, and Capital, on-demand. As the resource orchestration and coordination layer for AI, the aforementioned users can permissionlessly discover, negotiate, commit, and settle on resources in real-time. 
 
-Reppo is a simple protocol that gives model developers the ability to register their model IP in a smart contract on a blockchain. This simple act provides the foundation for model ownership, model developer reputation scoring, and model monetization using blockchain payment rails.
+#Reppo Protocol is a generalized protococol enabling IP-based monetization for data and infra owners and providers using blockchain payment rails.

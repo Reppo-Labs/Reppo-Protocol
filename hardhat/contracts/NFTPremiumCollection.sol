@@ -136,6 +136,10 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         }
     }
 
+    function isAddressWhitelisted(address addr) public view returns (bool) {
+        return whitelist[addr];
+    }
+
     function pause() public onlyOwner {
         _pause();
     }

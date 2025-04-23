@@ -221,4 +221,27 @@ describe("NFT Premium Collection", function () {
     
   });
 
+  describe ("Whitelisting", function () {
+
+    it ("Non owner cannot add to whitelist", async function () {
+      const { nftPremium, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await expect(nftPremium.connect(otherAccount).addToWhitelist([otherAccount.address])).to.be.revertedWithCustomError(nftPremium, "OwnableUnauthorizedAccount");
+    });
+
+    it ("Owner can add to whitelist", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.addToWhitelist([otherAccount.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(true);
+    });
+
+    it ("Owner can remove from whitelist", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.addToWhitelist([otherAccount.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(true);
+      await nftPremium.removeFromWhitelist([otherAccount.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(false);
+    });
+
+  });
+
 });

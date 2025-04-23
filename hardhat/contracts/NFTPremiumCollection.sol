@@ -26,7 +26,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
     mapping(address => bool) public whitelist;
 
     event Minted(address indexed to, uint256 tokenId, bool whitelisted);
-    event Claimed(address indexed to, uint256 tokenId);
+    event Claimed(address indexed to, uint256 tokenId, uint256 genesisTokenId);
 
     constructor(
         string memory name,
@@ -77,7 +77,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         _setTokenURI(currentClaimTokenId, metadataURI);
         claims[genesisTokenId] = true;
         currentClaimTokenId++;
-        emit Claimed(to, currentClaimTokenId - 1);
+        emit Claimed(to, currentClaimTokenId - 1, genesisTokenId);
     }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {

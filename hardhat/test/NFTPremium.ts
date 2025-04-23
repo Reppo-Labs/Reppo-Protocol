@@ -103,6 +103,13 @@ describe("NFT Premium Collection", function () {
       expect(await nftPremium.balanceOf(owner.address)).to.equal(mintCapId);
       await expect(nftPremium.safeMint(owner.address, { value: mintFee })).to.be.revertedWith("Max supply reached");
     });
+
+    it ("Emits Minted event when NFT is minted", async function () {
+      const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
+      await expect(nftPremium.safeMint(owner.address, { value: mintFee }))
+        .to.emit(nftPremium, "Minted")
+        .withArgs(owner.address, currentMintTokenId, false);
+    });
     
   });
 
@@ -126,7 +133,7 @@ describe("NFT Premium Collection", function () {
     
   });
 
-  describe ("Withdrawing", function () {
+  describe ("Withdrawals", function () {
 
     it ("Non owner cannot withdraw ETH from contract", async function () {
       const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
@@ -164,6 +171,16 @@ describe("NFT Premium Collection", function () {
       expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
       expect(await nftPremium.ownerOf(currentClaimTokenId)).to.equal(owner.address);
       expect(await nftPremium.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}${currentClaimTokenId}.json`);
+    });
+
+    it ("Emits Claimed event when NFT is claimed", async function () {
+      const { nftPremium, owner, nftGenesisContract } = await loadFixture(deployPremiumNFTCollection);
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
+      expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
+      await expect(nftPremium.safeClaim(owner.address, 1))
+        .to.emit(nftPremium, "Claimed")
+        .withArgs(owner.address, currentClaimTokenId, 1);
     });
 
     it ("Same genesis NFT can not be used to claim repeatedly", async function () {

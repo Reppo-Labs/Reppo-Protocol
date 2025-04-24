@@ -9,8 +9,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "hardhat/console.sol";
-
 contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
     address public genesisCollection;
@@ -27,6 +25,18 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
 
     event Minted(address indexed to, uint256 tokenId, bool whitelisted);
     event Claimed(address indexed to, uint256 tokenId, uint256 genesisTokenId);
+    event AddedToWhitelist(address indexed addr);
+    event RemovedFromWhitelist(address indexed addr);
+    event GenesisCollectionUpdated(address indexed newGenesisCollection);
+    event MintFeeUpdated(uint256 newMintFee);
+    event DiscountedMintFeeUpdated(uint256 newDiscountedMintFee);
+    event TransferEnabledAfterUpdated(uint256 newTransferEnabledAfter);
+    event MetadataBaseURIUpdated(string newMetadataBaseURI);
+    event MintCapIdUpdated(uint256 newMintCapId);
+    event ClaimsCapIdUpdated(uint256 newClaimsCapId);
+    event CurrentMintTokenIdUpdated(uint256 newCurrentMintTokenId);
+    event CurrentClaimTokenIdUpdated(uint256 newCurrentClaimTokenId);
+    event Withdraw(address indexed owner, uint256 amount);
 
     constructor(
         string memory name,
@@ -86,53 +96,65 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
 
     function setBaseURI(string memory newBaseURI) public onlyOwner {
         metadataBaseURI = newBaseURI;
+        emit MetadataBaseURIUpdated(newBaseURI);
     }
 
     function setCurrentMintTokenId(uint256 newCurrentMintTokenId) public onlyOwner {
         currentMintTokenId = newCurrentMintTokenId;
+        emit CurrentMintTokenIdUpdated(newCurrentMintTokenId);
     }
 
     function setMintCapId(uint256 newMintCapId) public onlyOwner {
         mintCapId = newMintCapId;
+        emit MintCapIdUpdated(newMintCapId);
     }
 
     function setCurrentClaimTokenId(uint256 newCurrentClaimTokenId) public onlyOwner {
         currentClaimTokenId = newCurrentClaimTokenId;
+        emit CurrentClaimTokenIdUpdated(newCurrentClaimTokenId);
     }
 
     function setClaimsCapId(uint256 newClaimsCapId) public onlyOwner {
         claimsCapId = newClaimsCapId;
+        emit ClaimsCapIdUpdated(newClaimsCapId);
     }
 
     function setMintFee(uint256 newMintFee) public onlyOwner {
         mintFee = newMintFee;
+        emit MintFeeUpdated(newMintFee);
     }
 
     function setDiscountedMintFee(uint256 newDiscountedMintFee) public onlyOwner {
         discountedMintFee = newDiscountedMintFee;
+        emit DiscountedMintFeeUpdated(newDiscountedMintFee);
     }
 
     function setTransferEnabledAfter(uint256 _transferEnabledAfter) public onlyOwner {
         transferEnabledAfter = _transferEnabledAfter;
+        emit TransferEnabledAfterUpdated(_transferEnabledAfter);
     }
 
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
+        emit Withdraw(owner(), address(this).balance);
     }
 
     function setGenesisCollection(address _genesisCollection) public onlyOwner {
         genesisCollection = _genesisCollection;
+        emit GenesisCollectionUpdated(_genesisCollection);
     }
 
     function addToWhitelist(address[] memory addresses) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
             whitelist[addresses[i]] = true;
+            emit AddedToWhitelist(addresses[i]);
         }
     }
 
     function removeFromWhitelist(address[] memory addresses) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
             whitelist[addresses[i]] = false;
+            emit RemovedFromWhitelist(addresses[i]);
         }
     }
 

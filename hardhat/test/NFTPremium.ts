@@ -242,6 +242,30 @@ describe("NFT Premium Collection", function () {
       expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(false);
     });
 
+    it ("Can add multiple addresses to whitelist", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.addToWhitelist([otherAccount.address, owner.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(true);
+      expect(await nftPremium.isAddressWhitelisted(owner.address)).to.equal(true);
+    });
+
+    it ("Can remove multiple addresses from whitelist", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.addToWhitelist([otherAccount.address, owner.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(true);
+      expect(await nftPremium.isAddressWhitelisted(owner.address)).to.equal(true);
+      await nftPremium.removeFromWhitelist([otherAccount.address, owner.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(false);
+      expect(await nftPremium.isAddressWhitelisted(owner.address)).to.equal(false);
+    });
+
+    it ("Can check if an address is whitelisted", async function () {
+      const { nftPremium, owner, otherAccount } = await loadFixture(deployPremiumNFTCollection);
+      await nftPremium.addToWhitelist([otherAccount.address]);
+      expect(await nftPremium.isAddressWhitelisted(otherAccount.address)).to.equal(true);
+      expect(await nftPremium.isAddressWhitelisted(owner.address)).to.equal(false);
+    });
+
   });
 
 });

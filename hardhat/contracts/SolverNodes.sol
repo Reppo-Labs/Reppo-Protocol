@@ -39,6 +39,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     event CurrentMintTokenIdUpdated(uint256 newCurrentMintTokenId);
     event CurrentClaimTokenIdUpdated(uint256 newCurrentClaimTokenId);
     event Withdraw(address indexed owner, uint256 amount);
+    event WhitelistCollectionUpdated(address[] newWhitelistCollection);
 
     constructor(
         string memory name,
@@ -159,6 +160,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
 
     function setWhitelistCollection(address[] memory _whitelistCollection) public onlyOwner {
         whitelistCollection = _whitelistCollection;
+        emit WhitelistCollectionUpdated(_whitelistCollection);
     }
 
     function addToWhitelist(address[] memory addresses) public onlyOwner {

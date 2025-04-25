@@ -103,15 +103,6 @@ describe("Premium Solver Nodes", function () {
       await expect(premiumSolverNodes.safeMint(owner.address, { value: discountedMintFee })).to.be.revertedWith("Incorrect Ether sent");
     });
 
-    // it ("Whitelisted user can mint a SolverNode with discounted minting fee", async function () {
-    //   const { premiumSolverNodes, owner } = await loadFixture(deployPremiumNFTCollection);
-    //   await premiumSolverNodes.addToWhitelist([owner.address]);
-    //   await premiumSolverNodes.safeMint(owner.address, { value: discountedMintFee });
-    //   expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
-    //   expect(await hre.ethers.provider.getBalance(premiumSolverNodes.target)).to.equal(discountedMintFee);
-    //   expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
-    // });
-
     it ("Can mint up to max allowed SolverNode mints", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       for (let i = 0; i < mintCapId; i++) {
@@ -281,6 +272,17 @@ describe("Premium Solver Nodes", function () {
       await premiumSolverNodes.addToWhitelist([otherAccount.address]);
       expect(await premiumSolverNodes.isAddressWhitelisted(otherAccount.address)).to.equal(true);
       expect(await premiumSolverNodes.isAddressWhitelisted(owner.address)).to.equal(false);
+    });
+
+    it ("Can check if an address is whitelisted for whitelisted collection address", async function () {
+      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
+      const WhitelistCollectionOne = await hre.ethers.getContractFactory("NFT");
+      const whitelistCollectionOne = await WhitelistCollectionOne.deploy(owner.address, "Reppo Collection 01", "REPPO01");
+      await whitelistCollectionOne.safeMint(otherAccount.address, 'uri');
+      expect(await whitelistCollectionOne.balanceOf(otherAccount.address)).to.equal(1);
+      expect(await whitelistCollectionOne.ownerOf(1)).to.equal(otherAccount.address);
+      await premiumSolverNodes.setWhitelistCollection([whitelistCollectionOne.target]);
+      expect(await premiumSolverNodes.isAddressWhitelisted(otherAccount.address)).to.equal(true);
     });
 
   });

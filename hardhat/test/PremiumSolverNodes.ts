@@ -24,11 +24,27 @@ describe("Premium Solver Nodes", function () {
     return { nftClaimable, owner, otherAccount };
   }
 
+  async function deployWhitelistNFTCollectionOne() {
+    const [owner, otherAccount] = await hre.ethers.getSigners();
+    const WhitelistCollectionOne = await hre.ethers.getContractFactory("NFT");
+    const whitelistCollectionOne = await WhitelistCollectionOne.deploy(owner.address, "Reppo Genesis", "REPPG");
+    return { whitelistCollectionOne, owner, otherAccount };
+  }
+
+  async function deployWhitelistNFTCollectionTwo() {
+    const [owner, otherAccount] = await hre.ethers.getSigners();
+    const WhitelistCollectionTwo = await hre.ethers.getContractFactory("NFT");
+    const whitelistCollectionTwo = await WhitelistCollectionTwo.deploy(owner.address, "Reppo Genesis", "REPPG");
+    return { whitelistCollectionTwo, owner, otherAccount };
+  }
+
   async function deployPremiumSolverNodes() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
-    const NFT = await hre.ethers.getContractFactory("SolverNodes");
+    const SolverNode = await hre.ethers.getContractFactory("SolverNodes");
     const { nftClaimable } = await loadFixture(deployClaimableNFTCollection);
-    const premiumSolverNodes = await NFT.deploy(
+    const { whitelistCollectionOne } = await loadFixture(deployWhitelistNFTCollectionOne);
+    const { whitelistCollectionTwo } = await loadFixture(deployWhitelistNFTCollectionTwo);
+    const premiumSolverNodes = await SolverNode.deploy(
       name,
       symbol,
       owner,
@@ -40,7 +56,8 @@ describe("Premium Solver Nodes", function () {
       metadataBaseURI,
       mintFee,
       discountedMintFee,
-      transferEnabledAfter
+      transferEnabledAfter,
+      [whitelistCollectionOne.target, whitelistCollectionTwo.target],
     );
     return { premiumSolverNodes, owner, otherAccount, nftClaimable: nftClaimable.target, nftGenesisContract: nftClaimable };
   }
@@ -68,12 +85,12 @@ describe("Premium Solver Nodes", function () {
 
   describe ("Minting", function () {
 
-    it ("Throws an error when trying to mint a NFT with incorrect ether amount", async function () {
+    it ("Throws an error when trying to mint a SolverNode with incorrect ether amount", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       await expect(premiumSolverNodes.safeMint(owner.address, { value: hre.ethers.parseEther("0.01") })).to.be.revertedWith("Incorrect Ether sent");
     });
 
-    it ("Non whitelisted user can mint a NFT with standard minting fee", async function () {
+    it ("Non whitelisted user can mint a SolverNode with standard minting fee", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
@@ -81,12 +98,12 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
     });
 
-    it ("Throws an error when a non whitelisted user trying to mint a NFT with discounted minting fee", async function () {
+    it ("Throws an error when a non whitelisted user trying to mint a SolverNode with discounted minting fee", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       await expect(premiumSolverNodes.safeMint(owner.address, { value: discountedMintFee })).to.be.revertedWith("Incorrect Ether sent");
     });
 
-    // it ("Whitelisted user can mint a NFT with discounted minting fee", async function () {
+    // it ("Whitelisted user can mint a SolverNode with discounted minting fee", async function () {
     //   const { premiumSolverNodes, owner } = await loadFixture(deployPremiumNFTCollection);
     //   await premiumSolverNodes.addToWhitelist([owner.address]);
     //   await premiumSolverNodes.safeMint(owner.address, { value: discountedMintFee });
@@ -95,7 +112,7 @@ describe("Premium Solver Nodes", function () {
     //   expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
     // });
 
-    it ("Can mint up to max allowed NFT mints", async function () {
+    it ("Can mint up to max allowed SolverNode mints", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       for (let i = 0; i < mintCapId; i++) {
         await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
@@ -104,7 +121,7 @@ describe("Premium Solver Nodes", function () {
       await expect(premiumSolverNodes.safeMint(owner.address, { value: mintFee })).to.be.revertedWith("Max supply reached");
     });
 
-    it ("Emits Minted event when NFT is minted", async function () {
+    it ("Emits Minted event when SolverNode is minted", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       await expect(premiumSolverNodes.safeMint(owner.address, { value: mintFee }))
         .to.emit(premiumSolverNodes, "Minted")
@@ -154,7 +171,7 @@ describe("Premium Solver Nodes", function () {
 
   describe ("Claims", function () {
 
-    it ("User without a genesis token cannot claim NFT", async function () {
+    it ("User without a genesis token cannot claim SolverNode", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumSolverNodes);
       await nftGenesisContract.safeMint(otherAccount.address, 'uri');
       expect(await nftGenesisContract.balanceOf(otherAccount.address)).to.equal(1);
@@ -162,7 +179,7 @@ describe("Premium Solver Nodes", function () {
       await expect(premiumSolverNodes.safeClaim(owner.address, 1)).to.be.revertedWith("Not the owner of the token");
     });
 
-    it ("User with a genesis token can claim NFT", async function () {
+    it ("User with a genesis token can claim SolverNode", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumSolverNodes);
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
@@ -173,7 +190,7 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}${currentClaimTokenId}.json`);
     });
 
-    it ("Emits Claimed event when NFT is claimed", async function () {
+    it ("Emits Claimed event when SolverNode is claimed", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract } = await loadFixture(deployPremiumSolverNodes);
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
@@ -183,7 +200,7 @@ describe("Premium Solver Nodes", function () {
         .withArgs(owner.address, currentClaimTokenId, 1);
     });
 
-    it ("Same genesis NFT can not be used to claim repeatedly", async function () {
+    it ("Same genesis SolverNode can not be used to claim repeatedly", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract } = await loadFixture(deployPremiumSolverNodes);
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
@@ -194,7 +211,7 @@ describe("Premium Solver Nodes", function () {
       await expect(premiumSolverNodes.safeClaim(owner.address, 1)).to.be.revertedWith("Token already claimed");
     });
 
-    it ("Can claim up to max allowed NFT claims", async function () {
+    it ("Can claim up to max allowed SolverNode claims", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract } = await loadFixture(deployPremiumSolverNodes);
       for (let i = currentClaimTokenId; i <= claimsCapId; i++) {
         await nftGenesisContract.safeMint(owner.address, 'uri');

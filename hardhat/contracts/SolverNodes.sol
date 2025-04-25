@@ -22,6 +22,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     uint256 public transferEnabledAfter;
     mapping(uint256 => bool) public claims;
     mapping(address => bool) public whitelist;
+    address[] public whitelistCollection;
 
     event Minted(address indexed to, uint256 tokenId);
     event Claimed(address indexed to, uint256 tokenId, uint256 genesisTokenId);
@@ -50,7 +51,8 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         string memory _metadataBaseURI,
         uint256 _mintFee,
         uint256 _discountedMintFee,
-        uint256 _transferEnabledAfter
+        uint256 _transferEnabledAfter,
+        address[] memory _whitelistCollection
     )
         ERC721(name, symbol)
         Ownable(initialOwner)
@@ -64,6 +66,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         mintFee = _mintFee;
         discountedMintFee = _discountedMintFee;
         transferEnabledAfter = _transferEnabledAfter;
+        whitelistCollection = _whitelistCollection;
     }
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {

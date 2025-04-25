@@ -23,7 +23,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
     mapping(uint256 => bool) public claims;
     mapping(address => bool) public whitelist;
 
-    event Minted(address indexed to, uint256 tokenId, bool whitelisted);
+    event Minted(address indexed to, uint256 tokenId);
     event Claimed(address indexed to, uint256 tokenId, uint256 genesisTokenId);
     event AddedToWhitelist(address indexed addr);
     event RemovedFromWhitelist(address indexed addr);
@@ -68,14 +68,12 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
-        bool isWhitelisted = whitelist[msg.sender];
-        uint256 mintFeeToPay = isWhitelisted ? discountedMintFee : mintFee;
-        require(msg.value == mintFeeToPay, "Incorrect Ether sent");
+        require(msg.value == mintFee, "Incorrect Ether sent");
         string memory metadataURI = formatMetadataURI(currentMintTokenId);
         _safeMint(to, currentMintTokenId);
         _setTokenURI(currentMintTokenId, metadataURI);
         currentMintTokenId++;
-        emit Minted(to, currentMintTokenId - 1, isWhitelisted);
+        emit Minted(to, currentMintTokenId - 1);
     }
 
     function safeClaim(address to, uint256 genesisTokenId) public whenNotPaused nonReentrant{

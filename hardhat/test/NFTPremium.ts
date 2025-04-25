@@ -86,14 +86,14 @@ describe("NFT Premium Collection", function () {
       await expect(nftPremium.safeMint(owner.address, { value: discountedMintFee })).to.be.revertedWith("Incorrect Ether sent");
     });
 
-    it ("Whitelisted user can mint a NFT with discounted minting fee", async function () {
-      const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
-      await nftPremium.addToWhitelist([owner.address]);
-      await nftPremium.safeMint(owner.address, { value: discountedMintFee });
-      expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
-      expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(discountedMintFee);
-      expect(await nftPremium.ownerOf(1)).to.equal(owner.address);
-    });
+    // it ("Whitelisted user can mint a NFT with discounted minting fee", async function () {
+    //   const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
+    //   await nftPremium.addToWhitelist([owner.address]);
+    //   await nftPremium.safeMint(owner.address, { value: discountedMintFee });
+    //   expect(await nftPremium.balanceOf(owner.address)).to.equal(1);
+    //   expect(await hre.ethers.provider.getBalance(nftPremium.target)).to.equal(discountedMintFee);
+    //   expect(await nftPremium.ownerOf(1)).to.equal(owner.address);
+    // });
 
     it ("Can mint up to max allowed NFT mints", async function () {
       const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
@@ -108,7 +108,7 @@ describe("NFT Premium Collection", function () {
       const { nftPremium, owner } = await loadFixture(deployPremiumNFTCollection);
       await expect(nftPremium.safeMint(owner.address, { value: mintFee }))
         .to.emit(nftPremium, "Minted")
-        .withArgs(owner.address, currentMintTokenId, false);
+        .withArgs(owner.address, currentMintTokenId);
     });
     
   });

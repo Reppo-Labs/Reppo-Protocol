@@ -1,1 +1,0 @@
-export const premiumCollectionMetadataBaseURI = "https://ipfs.io/ipfs/bafybeiglrj662izfl6oniqvpekgrgdy3kthuh7w2vfeupmnjvp4pb2dyii/" as const;      

@@ -9,9 +9,9 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
+contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
-    address public genesisCollection;
+    address public claimableCollection;
     uint256 public currentMintTokenId;
     uint256 public mintCapId;
     uint256 public currentClaimTokenId;
@@ -42,7 +42,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         string memory name,
         string memory symbol,
         address initialOwner,
-        address _genesisCollection,
+        address _claimableCollection,
         uint256 _currentMintTokenId,
         uint256 _mintCapId,
         uint256 _currentClaimTokenId,
@@ -55,7 +55,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         ERC721(name, symbol)
         Ownable(initialOwner)
     {
-        genesisCollection = _genesisCollection;
+        claimableCollection = _claimableCollection;
         currentMintTokenId = _currentMintTokenId;
         mintCapId = _mintCapId;
         currentClaimTokenId = _currentClaimTokenId;
@@ -76,16 +76,16 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
         emit Minted(to, currentMintTokenId - 1);
     }
 
-    function safeClaim(address to, uint256 genesisTokenId) public whenNotPaused nonReentrant{
+    function safeClaim(address to, uint256 claimableTokenId) public whenNotPaused nonReentrant{
         require(currentClaimTokenId <= claimsCapId, "Max supply reached");
-        require(IERC721(genesisCollection).ownerOf(genesisTokenId) == msg.sender, "Not the owner of the genesis token");
-        require(!claims[genesisTokenId], "Token already claimed");
+        require(IERC721(claimableCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of the token");
+        require(!claims[claimableTokenId], "Token already claimed");
         string memory metadataURI = formatMetadataURI(currentClaimTokenId);
         _safeMint(to, currentClaimTokenId);
         _setTokenURI(currentClaimTokenId, metadataURI);
-        claims[genesisTokenId] = true;
+        claims[claimableTokenId] = true;
         currentClaimTokenId++;
-        emit Claimed(to, currentClaimTokenId - 1, genesisTokenId);
+        emit Claimed(to, currentClaimTokenId - 1, claimableTokenId);
     }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {
@@ -138,7 +138,7 @@ contract NFTPremiumCollection is ERC721, ERC721URIStorage, ERC721Pausable, Ownab
     }
 
     function setGenesisCollection(address _genesisCollection) public onlyOwner {
-        genesisCollection = _genesisCollection;
+        claimableCollection = _genesisCollection;
         emit GenesisCollectionUpdated(_genesisCollection);
     }
 

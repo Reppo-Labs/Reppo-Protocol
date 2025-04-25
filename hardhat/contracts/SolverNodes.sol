@@ -25,6 +25,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     address[] public whitelistCollection;
 
     event Minted(address indexed to, uint256 tokenId);
+    event MintedWhitelist(address indexed to, uint256 tokenId);
     event Claimed(address indexed to, uint256 tokenId, uint256 genesisTokenId);
     event AddedToWhitelist(address indexed addr);
     event RemovedFromWhitelist(address indexed addr);
@@ -77,6 +78,17 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         _setTokenURI(currentMintTokenId, metadataURI);
         currentMintTokenId++;
         emit Minted(to, currentMintTokenId - 1);
+    }
+
+    function safeMintWhitelist() public payable whenNotPaused nonReentrant {
+        require(currentMintTokenId <= mintCapId, "Max supply reached");
+        require(isAddressWhitelisted(msg.sender), "Not whitelisted");
+        require(msg.value == discountedMintFee, "Incorrect Ether sent");
+        string memory metadataURI = formatMetadataURI(currentMintTokenId);
+        _safeMint(msg.sender, currentMintTokenId);
+        _setTokenURI(currentMintTokenId, metadataURI);
+        currentMintTokenId++;
+        emit MintedWhitelist(msg.sender, currentMintTokenId - 1);
     }
 
     function safeClaim(address to, uint256 claimableTokenId) public whenNotPaused nonReentrant{
@@ -145,6 +157,10 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         emit GenesisCollectionUpdated(_genesisCollection);
     }
 
+    function setWhitelistCollection(address[] memory _whitelistCollection) public onlyOwner {
+        whitelistCollection = _whitelistCollection;
+    }
+
     function addToWhitelist(address[] memory addresses) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
             whitelist[addresses[i]] = true;
@@ -160,7 +176,16 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     }
 
     function isAddressWhitelisted(address addr) public view returns (bool) {
-        return whitelist[addr];
+        bool isManuallyWhitelisted = whitelist[addr];
+        if (isManuallyWhitelisted) {
+            return true;
+        }
+        for (uint256 i = 0; i < whitelistCollection.length; i++) {
+            if (IERC721(whitelistCollection[i]).balanceOf(addr) > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function pause() public onlyOwner {

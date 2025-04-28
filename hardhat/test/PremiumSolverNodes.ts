@@ -2,8 +2,6 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { premiumCollectionMetadataBaseURI } from "../constants/nftCollection";
-
 describe("Premium Solver Nodes", function () {
 
   const name = "Reppo Premium";
@@ -12,10 +10,10 @@ describe("Premium Solver Nodes", function () {
   const mintCapId = 10;
   const currentClaimTokenId = 11;
   const claimsCapId = 15;
-  const metadataBaseURI = premiumCollectionMetadataBaseURI;
+  const metadataBaseURI = "https://ipfs/io/";
   const mintFee = hre.ethers.parseEther("0.22");
   const discountedMintFee = hre.ethers.parseEther("0.20");
-  const transferEnabledAfter = 	1747786226;
+  const transferEnabledAfter = 1777786226;
 
   async function deployClaimableNFTCollection() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
@@ -55,6 +53,7 @@ describe("Premium Solver Nodes", function () {
       mintFee,
       discountedMintFee,
       transferEnabledAfter,
+      [],
       [],
     );
     return { premiumSolverNodes, owner, otherAccount, nftClaimable: nftClaimable.target, nftGenesisContract: nftClaimable };
@@ -135,6 +134,22 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.balanceOf(otherAccount.address)).to.equal(1);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(0);
       expect(await premiumSolverNodes.ownerOf(1)).to.equal(otherAccount.address);
+    });
+
+    it ("Can transfer NFTs to allowed whitelist addresses before transferEnabledAfter", async function () {
+      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
+      await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
+      await premiumSolverNodes.setTransferAllowedWhitelist([otherAccount.address]);
+      await premiumSolverNodes.transferFrom(owner.address, otherAccount.address, 1);
+      expect(await premiumSolverNodes.balanceOf(otherAccount.address)).to.equal(1);
+      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(0);
+      expect(await premiumSolverNodes.ownerOf(1)).to.equal(otherAccount.address);
+    });
+
+    it ("Can not transfer NFTs to an address not in the whitelist addresses before transferEnabledAfter", async function () {
+      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
+      await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
+      await expect(premiumSolverNodes.transferFrom(owner.address, otherAccount.address, 1)).to.be.revertedWith("Transfer not allowed yet");
     });
     
   });

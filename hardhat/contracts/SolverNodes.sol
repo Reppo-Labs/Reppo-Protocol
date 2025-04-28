@@ -23,6 +23,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     mapping(uint256 => bool) public claims;
     mapping(address => bool) public whitelist;
     address[] public whitelistCollection;
+    address[] public transferAllowedWhitelist;
 
     event Minted(address indexed to, uint256 tokenId);
     event MintedWhitelist(address indexed to, uint256 tokenId);
@@ -40,6 +41,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     event CurrentClaimTokenIdUpdated(uint256 newCurrentClaimTokenId);
     event Withdraw(address indexed owner, uint256 amount);
     event WhitelistCollectionUpdated(address[] newWhitelistCollection);
+    event TransferAllowedWhitelistUpdated(address[] newTransferAllowedWhitelist);
 
     constructor(
         string memory name,
@@ -54,7 +56,8 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         uint256 _mintFee,
         uint256 _discountedMintFee,
         uint256 _transferEnabledAfter,
-        address[] memory _whitelistCollection
+        address[] memory _whitelistCollection,
+        address[] memory _transferAllowedWhitelist
     )
         ERC721(name, symbol)
         Ownable(initialOwner)
@@ -69,6 +72,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         discountedMintFee = _discountedMintFee;
         transferEnabledAfter = _transferEnabledAfter;
         whitelistCollection = _whitelistCollection;
+        transferAllowedWhitelist = _transferAllowedWhitelist;
     }
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {
@@ -148,6 +152,11 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         emit TransferEnabledAfterUpdated(_transferEnabledAfter);
     }
 
+    function setTransferAllowedWhitelist(address[] memory _transferAllowedWhitelist) public onlyOwner {
+        transferAllowedWhitelist = _transferAllowedWhitelist;
+        emit TransferAllowedWhitelistUpdated(_transferAllowedWhitelist);
+    }
+
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
         emit Withdraw(owner(), address(this).balance);
@@ -198,6 +207,15 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         _unpause();
     }
 
+    function isTransferToAddressWhitelisted(address to) public view returns (bool) {
+        for (uint256 i = 0; i < transferAllowedWhitelist.length; i++) {
+            if (to == transferAllowedWhitelist[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _update(address to, uint256 tokenId, address auth)
@@ -207,8 +225,11 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     {
         address from = _ownerOf(tokenId);
         bool isMint = from == address(0);
-        if (!isMint) {
-            require(block.timestamp > transferEnabledAfter, "Transfer not allowed yet");
+        if (!isMint && block.timestamp < transferEnabledAfter) {
+            bool isTransferToAddressAllowed = isTransferToAddressWhitelisted(to);
+            if (!isTransferToAddressAllowed) {
+                require(block.timestamp > transferEnabledAfter, "Transfer not allowed yet");
+            }
         }
         return super._update(to, tokenId, auth);
     }

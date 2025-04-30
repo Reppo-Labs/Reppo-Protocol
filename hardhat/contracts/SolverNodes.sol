@@ -121,7 +121,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     }
 
     function setTransferAllowedWhitelist(address[] memory _transferAllowedWhitelist) public onlyOwner {
-        require(_transferAllowedWhitelist.length <= 100, "Max 100 addresses allowed");
+        require(_transferAllowedWhitelist.length <= 20, "Max 20 addresses allowed");
         transferAllowedWhitelist = _transferAllowedWhitelist;
         emit TransferAllowedWhitelistUpdated(_transferAllowedWhitelist);
     }
@@ -139,7 +139,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     }
 
     function setWhitelistCollection(address[] memory _whitelistCollection) public onlyOwner {
-        require(_whitelistCollection.length <= 100, "Max 100 addresses allowed");
+        require(_whitelistCollection.length <= 20, "Max 20 addresses allowed");
         whitelistCollection = _whitelistCollection;
         emit WhitelistCollectionUpdated(_whitelistCollection);
     }

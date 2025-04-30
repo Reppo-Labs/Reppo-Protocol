@@ -84,16 +84,16 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         emit MintedWhitelist(msg.sender, currentMintTokenId - 1);
     }
 
-    function safeClaim(address to, uint256 claimableTokenId) public nonReentrant{
+    function safeClaim(uint256 claimableTokenId) public nonReentrant{
         require(currentClaimTokenId <= claimsCapId, "Max supply reached");
         require(IERC721(claimableCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of the token");
         require(!claims[claimableTokenId], "Token already claimed");
         string memory metadataURI = formatMetadataURI(currentClaimTokenId);
         claims[claimableTokenId] = true;
         currentClaimTokenId++;
-        _safeMint(to, currentClaimTokenId - 1);
+        _safeMint(msg.sender, currentClaimTokenId - 1);
         _setTokenURI(currentClaimTokenId - 1, metadataURI);
-        emit Claimed(to, currentClaimTokenId - 1, claimableTokenId);
+        emit Claimed(msg.sender, currentClaimTokenId - 1, claimableTokenId);
     }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {

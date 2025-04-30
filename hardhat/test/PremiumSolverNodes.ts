@@ -177,7 +177,7 @@ describe("Premium Solver Nodes", function () {
       await nftGenesisContract.safeMint(otherAccount.address, 'uri');
       expect(await nftGenesisContract.balanceOf(otherAccount.address)).to.equal(1);
       expect(await nftGenesisContract.ownerOf(1)).to.equal(otherAccount.address);
-      await expect(premiumSolverNodes.safeClaim(owner.address, 1)).to.be.revertedWith("Not the owner of the token");
+      await expect(premiumSolverNodes.safeClaim(1)).to.be.revertedWith("Not the owner of the token");
     });
 
     it ("User with a claimable token can claim SolverNode", async function () {
@@ -185,7 +185,7 @@ describe("Premium Solver Nodes", function () {
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
       expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
-      await premiumSolverNodes.safeClaim(owner.address, 1);
+      await premiumSolverNodes.safeClaim(1);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId)).to.equal(owner.address);
       expect(await premiumSolverNodes.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}${currentClaimTokenId}.json`);
@@ -197,15 +197,15 @@ describe("Premium Solver Nodes", function () {
       await nftGenesisContract.safeMint(owner.address, 'uri');
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(3);
-      await premiumSolverNodes.safeClaim(owner.address, 1);
+      await premiumSolverNodes.safeClaim(1);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId)).to.equal(owner.address);
       expect(await premiumSolverNodes.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}5001.json`);
-      await premiumSolverNodes.safeClaim(owner.address, 2);
+      await premiumSolverNodes.safeClaim(2);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(2);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId + 1)).to.equal(owner.address);
       expect(await premiumSolverNodes.tokenURI(currentClaimTokenId + 1)).to.equal(`${metadataBaseURI}5002.json`);
-      await premiumSolverNodes.safeClaim(owner.address, 3);
+      await premiumSolverNodes.safeClaim(3);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(3);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId + 2)).to.equal(owner.address);
       expect(await premiumSolverNodes.tokenURI(currentClaimTokenId + 2)).to.equal(`${metadataBaseURI}5003.json`);
@@ -216,7 +216,7 @@ describe("Premium Solver Nodes", function () {
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
       expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
-      await expect(premiumSolverNodes.safeClaim(owner.address, 1))
+      await expect(premiumSolverNodes.safeClaim(1))
         .to.emit(premiumSolverNodes, "Claimed")
         .withArgs(owner.address, currentClaimTokenId, 1);
     });
@@ -226,21 +226,21 @@ describe("Premium Solver Nodes", function () {
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
       expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
-      await premiumSolverNodes.safeClaim(owner.address, 1);
+      await premiumSolverNodes.safeClaim(1);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId)).to.equal(owner.address);
-      await expect(premiumSolverNodes.safeClaim(owner.address, 1)).to.be.revertedWith("Token already claimed");
+      await expect(premiumSolverNodes.safeClaim(1)).to.be.revertedWith("Token already claimed");
     });
 
     it ("Can claim up to max allowed SolverNode claims", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract } = await loadFixture(deployPremiumSolverNodes);
       for (let i = currentClaimTokenId; i <= claimsCapId; i++) {
         await nftGenesisContract.safeMint(owner.address, 'uri');
-        await premiumSolverNodes.safeClaim(owner.address, i - currentClaimTokenId + 1);
+        await premiumSolverNodes.safeClaim(i - currentClaimTokenId + 1);
         expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(i - currentClaimTokenId + 1);
         expect(await premiumSolverNodes.ownerOf(i)).to.equal(owner.address);
       }
-      await expect(premiumSolverNodes.safeClaim(owner.address, claimsCapId)).to.be.revertedWith("Max supply reached");
+      await expect(premiumSolverNodes.safeClaim(claimsCapId)).to.be.revertedWith("Max supply reached");
     });
 
     it ("After claiming, transferring the genesis token to another address, does not allow to claim again", async function () {
@@ -248,13 +248,13 @@ describe("Premium Solver Nodes", function () {
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
       expect(await nftGenesisContract.ownerOf(1)).to.equal(owner.address);
-      await premiumSolverNodes.safeClaim(owner.address, 1);
+      await premiumSolverNodes.safeClaim(1);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId)).to.equal(owner.address);
       await nftGenesisContract.transferFrom(owner.address, otherAccount.address, 1);
       expect(await nftGenesisContract.balanceOf(otherAccount.address)).to.equal(1);
       expect(await nftGenesisContract.ownerOf(1)).to.equal(otherAccount.address);
-      await expect(premiumSolverNodes.connect(otherAccount).safeClaim(otherAccount.address, 1)).to.be.revertedWith("Token already claimed");
+      await expect(premiumSolverNodes.connect(otherAccount).safeClaim(1)).to.be.revertedWith("Token already claimed");
     });
     
   });

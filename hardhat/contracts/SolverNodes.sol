@@ -35,10 +35,6 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     event DiscountedMintFeeUpdated(uint256 newDiscountedMintFee);
     event TransferEnabledAfterUpdated(uint256 newTransferEnabledAfter);
     event MetadataBaseURIUpdated(string newMetadataBaseURI);
-    event MintCapIdUpdated(uint256 newMintCapId);
-    event ClaimsCapIdUpdated(uint256 newClaimsCapId);
-    event CurrentMintTokenIdUpdated(uint256 newCurrentMintTokenId);
-    event CurrentClaimTokenIdUpdated(uint256 newCurrentClaimTokenId);
     event Withdraw(address indexed owner, uint256 amount);
     event WhitelistCollectionUpdated(address[] newWhitelistCollection);
     event TransferAllowedWhitelistUpdated(address[] newTransferAllowedWhitelist);

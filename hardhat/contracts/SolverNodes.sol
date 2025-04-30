@@ -143,6 +143,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     }
 
     function setWhitelistCollection(address[] memory _whitelistCollection) public onlyOwner {
+        require(_whitelistCollection.length <= 100, "Max 100 addresses allowed");
         whitelistCollection = _whitelistCollection;
         emit WhitelistCollectionUpdated(_whitelistCollection);
     }

@@ -11,6 +11,7 @@ describe("SolverNodesStandard", function () {
   const discountedMintFee = hre.ethers.parseEther("0.20");
   const transferEnabledAfter = 1777786226;
   const mintCapId = 15000;
+  const whitelistCollection: `0x${string}`[] = [];
 
   async function deployGhibiliCollection() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
@@ -33,7 +34,8 @@ describe("SolverNodesStandard", function () {
       owner.address,
       owner.address,
       owner.address,
-      owner.address
+      owner.address,
+      whitelistCollection,
     );
     return { standardSolverNodes, owner, otherAccount };
   }

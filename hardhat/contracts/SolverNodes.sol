@@ -12,10 +12,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
     address public claimableCollection;
-    uint256 public currentMintTokenId;
-    uint256 public mintCapId;
-    uint256 public currentClaimTokenId;
-    uint256 public claimsCapId;
+    uint256 public currentMintTokenId = 1;
+    uint256 public mintCapId = 5000;
+    uint256 public currentClaimTokenId = 5001;
+    uint256 public claimsCapId = 5550;
     string public metadataBaseURI;
     uint256 public mintFee;
     uint256 public discountedMintFee;
@@ -48,10 +48,6 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         string memory symbol,
         address initialOwner,
         address _claimableCollection,
-        uint256 _currentMintTokenId,
-        uint256 _mintCapId,
-        uint256 _currentClaimTokenId,
-        uint256 _claimsCapId,
         string memory _metadataBaseURI,
         uint256 _mintFee,
         uint256 _discountedMintFee,
@@ -63,10 +59,6 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         Ownable(initialOwner)
     {
         claimableCollection = _claimableCollection;
-        currentMintTokenId = _currentMintTokenId;
-        mintCapId = _mintCapId;
-        currentClaimTokenId = _currentClaimTokenId;
-        claimsCapId = _claimsCapId;
         metadataBaseURI = _metadataBaseURI;
         mintFee = _mintFee;
         discountedMintFee = _discountedMintFee;
@@ -75,7 +67,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         transferAllowedWhitelist = _transferAllowedWhitelist;
     }
 
-    function safeMint(address to) public payable whenNotPaused nonReentrant {
+    function safeMint(address to) public payable nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
         require(msg.value == mintFee, "Incorrect Ether sent");
         string memory metadataURI = formatMetadataURI(currentMintTokenId);
@@ -85,7 +77,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         emit Minted(to, currentMintTokenId - 1);
     }
 
-    function safeMintWhitelist() public payable whenNotPaused nonReentrant {
+    function safeMintWhitelist() public payable nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
         require(isAddressWhitelisted(msg.sender), "Not whitelisted");
         require(msg.value == discountedMintFee, "Incorrect Ether sent");
@@ -96,15 +88,15 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         emit MintedWhitelist(msg.sender, currentMintTokenId - 1);
     }
 
-    function safeClaim(address to, uint256 claimableTokenId) public whenNotPaused nonReentrant{
+    function safeClaim(address to, uint256 claimableTokenId) public nonReentrant{
         require(currentClaimTokenId <= claimsCapId, "Max supply reached");
         require(IERC721(claimableCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of the token");
         require(!claims[claimableTokenId], "Token already claimed");
         string memory metadataURI = formatMetadataURI(currentClaimTokenId);
-        _safeMint(to, currentClaimTokenId);
-        _setTokenURI(currentClaimTokenId, metadataURI);
         claims[claimableTokenId] = true;
         currentClaimTokenId++;
+        _safeMint(to, currentClaimTokenId - 1);
+        _setTokenURI(currentClaimTokenId - 1, metadataURI);
         emit Claimed(to, currentClaimTokenId - 1, claimableTokenId);
     }
 
@@ -115,26 +107,6 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     function setBaseURI(string memory newBaseURI) public onlyOwner {
         metadataBaseURI = newBaseURI;
         emit MetadataBaseURIUpdated(newBaseURI);
-    }
-
-    function setCurrentMintTokenId(uint256 newCurrentMintTokenId) public onlyOwner {
-        currentMintTokenId = newCurrentMintTokenId;
-        emit CurrentMintTokenIdUpdated(newCurrentMintTokenId);
-    }
-
-    function setMintCapId(uint256 newMintCapId) public onlyOwner {
-        mintCapId = newMintCapId;
-        emit MintCapIdUpdated(newMintCapId);
-    }
-
-    function setCurrentClaimTokenId(uint256 newCurrentClaimTokenId) public onlyOwner {
-        currentClaimTokenId = newCurrentClaimTokenId;
-        emit CurrentClaimTokenIdUpdated(newCurrentClaimTokenId);
-    }
-
-    function setClaimsCapId(uint256 newClaimsCapId) public onlyOwner {
-        claimsCapId = newClaimsCapId;
-        emit ClaimsCapIdUpdated(newClaimsCapId);
     }
 
     function setMintFee(uint256 newMintFee) public onlyOwner {
@@ -153,13 +125,16 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     }
 
     function setTransferAllowedWhitelist(address[] memory _transferAllowedWhitelist) public onlyOwner {
+        require(_transferAllowedWhitelist.length <= 10, "Max 10 addresses allowed");
         transferAllowedWhitelist = _transferAllowedWhitelist;
         emit TransferAllowedWhitelistUpdated(_transferAllowedWhitelist);
     }
 
     function withdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
-        emit Withdraw(owner(), address(this).balance);
+        uint256 balance = address(this).balance;
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Withdrawal failed");
+        emit Withdraw(owner(), balance);
     }
 
     function setGenesisCollection(address _genesisCollection) public onlyOwner {
@@ -240,7 +215,12 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        return super.tokenURI(tokenId);
+        return string(abi.encodePacked(metadataBaseURI, Strings.toString(tokenId), ".json"));
+    }
+
+    function transferOwnership(address newOwner) public override(Ownable) onlyOwner {
+        require(paused() == false, "Contract is paused");
+        super.transferOwnership(newOwner);
     }
 
     function supportsInterface(bytes4 interfaceId)

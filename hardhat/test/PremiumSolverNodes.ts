@@ -7,9 +7,9 @@ describe("Premium Solver Nodes", function () {
   const name = "Reppo Premium";
   const symbol = "REPPOP";
   const currentMintTokenId = 1;
-  const mintCapId = 10;
-  const currentClaimTokenId = 11;
-  const claimsCapId = 15;
+  const mintCapId = 5000;
+  const currentClaimTokenId = 5001;
+  const claimsCapId = 5550;
   const metadataBaseURI = "https://ipfs/io/";
   const mintFee = hre.ethers.parseEther("0.22");
   const discountedMintFee = hre.ethers.parseEther("0.20");
@@ -45,10 +45,6 @@ describe("Premium Solver Nodes", function () {
       symbol,
       owner,
       nftClaimable.target,
-      currentMintTokenId,
-      mintCapId,
-      currentClaimTokenId,
-      claimsCapId,
       metadataBaseURI,
       mintFee,
       discountedMintFee,
@@ -93,6 +89,7 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await hre.ethers.provider.getBalance(premiumSolverNodes.target)).to.equal(mintFee);
       expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
+      expect(await premiumSolverNodes.tokenURI(1)).to.equal(`${metadataBaseURI}1.json`);
     });
 
     it ("Throws an error when a non whitelisted user trying to mint a SolverNode with discounted minting fee", async function () {
@@ -183,7 +180,7 @@ describe("Premium Solver Nodes", function () {
       await expect(premiumSolverNodes.safeClaim(owner.address, 1)).to.be.revertedWith("Not the owner of the token");
     });
 
-    it ("User with a genesis token can claim SolverNode", async function () {
+    it ("User with a claimable token can claim SolverNode", async function () {
       const { premiumSolverNodes, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumSolverNodes);
       await nftGenesisContract.safeMint(owner.address, 'uri');
       expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(1);
@@ -192,6 +189,26 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await premiumSolverNodes.ownerOf(currentClaimTokenId)).to.equal(owner.address);
       expect(await premiumSolverNodes.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}${currentClaimTokenId}.json`);
+    });
+
+    it ("User with multiple claimable tokens can claim multiple SolverNodes", async function () {
+      const { premiumSolverNodes, owner, nftGenesisContract, otherAccount } = await loadFixture(deployPremiumSolverNodes);
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      await nftGenesisContract.safeMint(owner.address, 'uri');
+      expect(await nftGenesisContract.balanceOf(owner.address)).to.equal(3);
+      await premiumSolverNodes.safeClaim(owner.address, 1);
+      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
+      expect(await premiumSolverNodes.ownerOf(currentClaimTokenId)).to.equal(owner.address);
+      expect(await premiumSolverNodes.tokenURI(currentClaimTokenId)).to.equal(`${metadataBaseURI}5001.json`);
+      await premiumSolverNodes.safeClaim(owner.address, 2);
+      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(2);
+      expect(await premiumSolverNodes.ownerOf(currentClaimTokenId + 1)).to.equal(owner.address);
+      expect(await premiumSolverNodes.tokenURI(currentClaimTokenId + 1)).to.equal(`${metadataBaseURI}5002.json`);
+      await premiumSolverNodes.safeClaim(owner.address, 3);
+      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(3);
+      expect(await premiumSolverNodes.ownerOf(currentClaimTokenId + 2)).to.equal(owner.address);
+      expect(await premiumSolverNodes.tokenURI(currentClaimTokenId + 2)).to.equal(`${metadataBaseURI}5003.json`);
     });
 
     it ("Emits Claimed event when SolverNode is claimed", async function () {
@@ -336,6 +353,28 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.ownerOf(1)).to.equal(otherAccount.address);
       expect(await premiumSolverNodes.ownerOf(2)).to.equal(otherAccount.address);
     });
+
+  });
+
+  describe ("Ownership", function () {
+
+    it ("Non owner cannot transfer ownership", async function () {
+      const { premiumSolverNodes, otherAccount } = await loadFixture(deployPremiumSolverNodes);
+      await expect(premiumSolverNodes.connect(otherAccount).transferOwnership(otherAccount.address)).to.be.revertedWithCustomError(premiumSolverNodes, "OwnableUnauthorizedAccount");
+    });
+
+    it ("Owner can transfer ownership", async function () {
+      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
+      await premiumSolverNodes.transferOwnership(otherAccount.address);
+      expect(await premiumSolverNodes.owner()).to.equal(otherAccount.address);
+    });
+
+    it ("Owner can not transfer ownership when contract is paused", async function () {
+      const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
+      await premiumSolverNodes.pause();
+      await expect(premiumSolverNodes.transferOwnership(owner.address)).to.be.revertedWith("Contract is paused");
+    });
+
 
   });
 

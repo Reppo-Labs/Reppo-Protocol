@@ -55,7 +55,8 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         address _claimableGhibiliCollection,
         address _claimableAnomadantCollection,
         address _claimableJohnnyTrainersCrewCollection,
-        address _claimableJohnnyCollection
+        address _claimableJohnnyCollection,
+        address[] memory _whitelistCollection
     )
         ERC721(name, symbol)
         Ownable(initialOwner)
@@ -68,6 +69,7 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         claimableAnomadantCollection = _claimableAnomadantCollection;
         claimableJohnnyTrainersCrewCollection = _claimableJohnnyTrainersCrewCollection;
         claimableJohnnyCollection = _claimableJohnnyCollection;
+        whitelistCollection = _whitelistCollection;
     }
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {

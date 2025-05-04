@@ -66,34 +66,34 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     function safeMint(address to) public payable nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
         require(msg.value == mintFee, "Incorrect Ether sent");
-        string memory metadataURI = formatMetadataURI(currentMintTokenId);
-        _safeMint(to, currentMintTokenId);
-        _setTokenURI(currentMintTokenId, metadataURI);
-        currentMintTokenId++;
-        emit Minted(to, currentMintTokenId - 1);
+        uint256 mintTokenId = currentMintTokenId++; 
+        string memory metadataURI = formatMetadataURI(mintTokenId);
+        _safeMint(to, mintTokenId);
+        _setTokenURI(mintTokenId, metadataURI);
+        emit Minted(to, mintTokenId);
     }
 
     function safeMintWhitelist() public payable nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
         require(isAddressWhitelisted(msg.sender), "Not whitelisted");
         require(msg.value == discountedMintFee, "Incorrect Ether sent");
-        string memory metadataURI = formatMetadataURI(currentMintTokenId);
-        _safeMint(msg.sender, currentMintTokenId);
-        _setTokenURI(currentMintTokenId, metadataURI);
-        currentMintTokenId++;
-        emit MintedWhitelist(msg.sender, currentMintTokenId - 1);
+        uint256 mintTokenId = currentMintTokenId++; 
+        string memory metadataURI = formatMetadataURI(mintTokenId);
+        _safeMint(msg.sender, mintTokenId);
+        _setTokenURI(mintTokenId, metadataURI);
+        emit MintedWhitelist(msg.sender, mintTokenId);
     }
 
     function safeClaim(uint256 claimableTokenId) public nonReentrant{
         require(currentClaimTokenId <= claimsCapId, "Max supply reached");
         require(IERC721(claimableCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of the token");
         require(!claims[claimableTokenId], "Token already claimed");
-        string memory metadataURI = formatMetadataURI(currentClaimTokenId);
         claims[claimableTokenId] = true;
-        currentClaimTokenId++;
-        _safeMint(msg.sender, currentClaimTokenId - 1);
-        _setTokenURI(currentClaimTokenId - 1, metadataURI);
-        emit Claimed(msg.sender, currentClaimTokenId - 1, claimableTokenId);
+        uint256 claimTokenId = currentClaimTokenId++;
+        string memory metadataURI = formatMetadataURI(claimTokenId);
+        _safeMint(msg.sender, claimTokenId);
+        _setTokenURI(claimTokenId, metadataURI);
+        emit Claimed(msg.sender, claimTokenId, claimableTokenId);
     }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {

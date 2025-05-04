@@ -92,6 +92,17 @@ describe("Premium Solver Nodes", function () {
       expect(await premiumSolverNodes.tokenURI(1)).to.equal(`${metadataBaseURI}1.json`);
     });
 
+    it ("Mints sequentially when multiple SolverNodes are minted", async function () {
+      const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
+      await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
+      await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
+      await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
+      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(3);
+      expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
+      expect(await premiumSolverNodes.ownerOf(2)).to.equal(owner.address);
+      expect(await premiumSolverNodes.ownerOf(3)).to.equal(owner.address);
+    });
+
     it ("Throws an error when a non whitelisted user trying to mint a SolverNode with discounted minting fee", async function () {
       const { premiumSolverNodes, owner } = await loadFixture(deployPremiumSolverNodes);
       await expect(premiumSolverNodes.safeMint(owner.address, { value: discountedMintFee })).to.be.revertedWith("Incorrect Ether sent");

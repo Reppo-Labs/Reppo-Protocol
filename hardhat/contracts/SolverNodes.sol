@@ -212,6 +212,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
+        _requireOwned(tokenId);
         return string(abi.encodePacked(metadataBaseURI, Strings.toString(tokenId), ".json"));
     }
 

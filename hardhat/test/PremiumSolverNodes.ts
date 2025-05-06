@@ -38,7 +38,7 @@ describe("Premium Solver Nodes", function () {
 
   async function deployPremiumSolverNodes() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
-    const SolverNode = await hre.ethers.getContractFactory("SolverNodes");
+    const SolverNode = await hre.ethers.getContractFactory("PremiumSolverNodes");
     const { nftClaimable } = await loadFixture(deployClaimableNFTCollection);
     const premiumSolverNodes = await SolverNode.deploy(
       name,
@@ -147,7 +147,7 @@ describe("Premium Solver Nodes", function () {
     it ("Can transfer NFTs to allowed whitelist addresses before transferEnabledAfter", async function () {
       const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
       await premiumSolverNodes.safeMint(owner.address, { value: mintFee });
-      await premiumSolverNodes.setTransferAllowedWhitelist([otherAccount.address]);
+      await premiumSolverNodes.addToTransferAllowedWhitelist([otherAccount.address]);
       await premiumSolverNodes.transferFrom(owner.address, otherAccount.address, 1);
       expect(await premiumSolverNodes.balanceOf(otherAccount.address)).to.equal(1);
       expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(0);
@@ -313,45 +313,6 @@ describe("Premium Solver Nodes", function () {
       await premiumSolverNodes.addToWhitelist([otherAccount.address]);
       expect(await premiumSolverNodes.isAddressWhitelisted(otherAccount.address)).to.equal(true);
       expect(await premiumSolverNodes.isAddressWhitelisted(owner.address)).to.equal(false);
-    });
-
-    it ("Can check if an address is whitelisted for whitelisted collection holder", async function () {
-      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
-      const { whitelistCollectionOne } = await loadFixture(deployWhitelistNFTCollectionOne);
-      await premiumSolverNodes.setWhitelistCollection([whitelistCollectionOne.target]);
-      await whitelistCollectionOne.safeMint(otherAccount.address, 'uri');
-      expect(await whitelistCollectionOne.balanceOf(otherAccount.address)).to.equal(1);
-      expect(await whitelistCollectionOne.ownerOf(1)).to.equal(otherAccount.address);
-      expect(await premiumSolverNodes.isAddressWhitelisted(otherAccount.address)).to.equal(true);
-      expect(await premiumSolverNodes.isAddressWhitelisted(owner.address)).to.equal(false);
-    });
-
-    it ("Whitelisted collection holder can buy SolverNode at discount", async function () {
-      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
-      const { whitelistCollectionOne } = await loadFixture(deployWhitelistNFTCollectionOne);
-      await premiumSolverNodes.setWhitelistCollection([whitelistCollectionOne.target]);
-      await whitelistCollectionOne.safeMint(owner.address, 'uri');
-      expect(await whitelistCollectionOne.balanceOf(owner.address)).to.equal(1);
-      expect(await whitelistCollectionOne.ownerOf(1)).to.equal(owner.address);
-      await premiumSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(1);
-      expect(await hre.ethers.provider.getBalance(premiumSolverNodes.target)).to.equal(discountedMintFee);
-      expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
-    });
-
-    it ("Whitelisted collection holder can buy multiple SolverNodes at discount", async function () {
-      const { premiumSolverNodes, owner, otherAccount } = await loadFixture(deployPremiumSolverNodes);
-      const { whitelistCollectionOne } = await loadFixture(deployWhitelistNFTCollectionOne);
-      const { whitelistCollectionTwo } = await loadFixture(deployWhitelistNFTCollectionTwo);
-      await premiumSolverNodes.setWhitelistCollection([whitelistCollectionOne.target, whitelistCollectionTwo.target]);
-      await whitelistCollectionTwo.safeMint(owner.address, 'uri');
-      expect(await whitelistCollectionTwo.balanceOf(owner.address)).to.equal(1);
-      expect(await whitelistCollectionTwo.ownerOf(1)).to.equal(owner.address);
-      await premiumSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      await premiumSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      expect(await premiumSolverNodes.balanceOf(owner.address)).to.equal(2);
-      expect(await premiumSolverNodes.ownerOf(1)).to.equal(owner.address);
-      expect(await premiumSolverNodes.ownerOf(2)).to.equal(owner.address);
     });
 
     it ("Manualy whitelisted address can buy multiple SolverNodes at discount", async function () {

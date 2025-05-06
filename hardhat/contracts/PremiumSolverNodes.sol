@@ -9,7 +9,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
+contract PremiumSolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
     address public claimableCollection;
     uint256 public currentMintTokenId = 1;
@@ -22,45 +22,43 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     uint256 public transferEnabledAfter;
     mapping(uint256 => bool) public claims;
     mapping(address => bool) public whitelist;
-    address[] public whitelistCollection;
-    address[] public transferAllowedWhitelist;
+    mapping(address => bool) public transferAllowedToWhitelist;
 
     event Minted(address indexed to, uint256 tokenId);
     event MintedWhitelist(address indexed to, uint256 tokenId);
     event Claimed(address indexed to, uint256 tokenId, uint256 genesisTokenId);
     event AddedToWhitelist(address indexed addr);
     event RemovedFromWhitelist(address indexed addr);
-    event GenesisCollectionUpdated(address indexed newGenesisCollection);
     event MintFeeUpdated(uint256 newMintFee);
     event DiscountedMintFeeUpdated(uint256 newDiscountedMintFee);
     event TransferEnabledAfterUpdated(uint256 newTransferEnabledAfter);
     event MetadataBaseURIUpdated(string newMetadataBaseURI);
     event Withdraw(address indexed owner, uint256 amount);
-    event WhitelistCollectionUpdated(address[] newWhitelistCollection);
-    event TransferAllowedWhitelistUpdated(address[] newTransferAllowedWhitelist);
+    event AddedToTransferAllowedWhitelist(address indexed addr);
+    event RemovedFromTransferAllowedWhitelist(address indexed addr);
 
     constructor(
         string memory name,
         string memory symbol,
-        address initialOwner,
+        address owner,
         address _claimableCollection,
         string memory _metadataBaseURI,
         uint256 _mintFee,
         uint256 _discountedMintFee,
         uint256 _transferEnabledAfter,
-        address[] memory _whitelistCollection,
-        address[] memory _transferAllowedWhitelist
+        address[] memory _whitelist,
+        address[] memory _transferAllowedToWhitelist
     )
         ERC721(name, symbol)
-        Ownable(initialOwner)
+        Ownable(owner)
     {
         claimableCollection = _claimableCollection;
         metadataBaseURI = _metadataBaseURI;
         mintFee = _mintFee;
         discountedMintFee = _discountedMintFee;
         transferEnabledAfter = _transferEnabledAfter;
-        whitelistCollection = _whitelistCollection;
-        transferAllowedWhitelist = _transferAllowedWhitelist;
+        addToWhitelist(_whitelist);
+        addToTransferAllowedWhitelist(_transferAllowedToWhitelist);
     }
 
     function safeMint(address to) public payable nonReentrant {
@@ -120,28 +118,11 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         emit TransferEnabledAfterUpdated(_transferEnabledAfter);
     }
 
-    function setTransferAllowedWhitelist(address[] memory _transferAllowedWhitelist) public onlyOwner {
-        require(_transferAllowedWhitelist.length <= 20, "Max 20 addresses allowed");
-        transferAllowedWhitelist = _transferAllowedWhitelist;
-        emit TransferAllowedWhitelistUpdated(_transferAllowedWhitelist);
-    }
-
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         (bool success, ) = payable(owner()).call{value: balance}("");
         require(success, "Withdrawal failed");
         emit Withdraw(owner(), balance);
-    }
-
-    function setGenesisCollection(address _genesisCollection) public onlyOwner {
-        claimableCollection = _genesisCollection;
-        emit GenesisCollectionUpdated(_genesisCollection);
-    }
-
-    function setWhitelistCollection(address[] memory _whitelistCollection) public onlyOwner {
-        require(_whitelistCollection.length <= 20, "Max 20 addresses allowed");
-        whitelistCollection = _whitelistCollection;
-        emit WhitelistCollectionUpdated(_whitelistCollection);
     }
 
     function addToWhitelist(address[] memory addresses) public onlyOwner {
@@ -159,16 +140,7 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
     }
 
     function isAddressWhitelisted(address addr) public view returns (bool) {
-        bool isManuallyWhitelisted = whitelist[addr];
-        if (isManuallyWhitelisted) {
-            return true;
-        }
-        for (uint256 i = 0; i < whitelistCollection.length; i++) {
-            if (IERC721(whitelistCollection[i]).balanceOf(addr) > 0) {
-                return true;
-            }
-        }
-        return false;
+        return whitelist[addr];
     }
 
     function pause() public onlyOwner {
@@ -179,13 +151,22 @@ contract SolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, Reent
         _unpause();
     }
 
-    function isTransferToAddressWhitelisted(address to) public view returns (bool) {
-        for (uint256 i = 0; i < transferAllowedWhitelist.length; i++) {
-            if (to == transferAllowedWhitelist[i]) {
-                return true;
-            }
+    function addToTransferAllowedWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            transferAllowedToWhitelist[addresses[i]] = true;
+            emit AddedToTransferAllowedWhitelist(addresses[i]);
         }
-        return false;
+    }
+
+    function removeFromTransferAllowedWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            transferAllowedToWhitelist[addresses[i]] = false;
+            emit RemovedFromTransferAllowedWhitelist(addresses[i]);
+        }
+    }
+
+    function isTransferToAddressWhitelisted(address to) public view returns (bool) {
+        return transferAllowedToWhitelist[to];
     }
 
     // The following functions are overrides required by Solidity.

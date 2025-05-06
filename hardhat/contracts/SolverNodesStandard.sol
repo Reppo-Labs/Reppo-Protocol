@@ -9,7 +9,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
+contract StandardSolverNodes is ERC721, ERC721URIStorage, ERC721Pausable, Ownable, ReentrancyGuard {
 
     uint256 public currentMintTokenId = 1;
     uint256 public mintCapId = 15000;
@@ -30,8 +30,7 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
     uint256 public discountedMintFee;
     uint256 public transferEnabledAfter;
     mapping(address => bool) public whitelist;
-    address[] public whitelistCollection;
-    address[] public transferAllowedWhitelist;
+    mapping(address => bool) public transferAllowedToWhitelist;
 
     event Minted(address indexed to, uint256 tokenId);
     event MintedWhitelist(address indexed to, uint256 tokenId);
@@ -41,13 +40,15 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
     event TransferEnabledAfterUpdated(uint256 newTransferEnabledAfter);
     event MetadataBaseURIUpdated(string newMetadataBaseURI);
     event Withdraw(address indexed owner, uint256 amount);
-    event WhitelistCollectionUpdated(address[] newWhitelistCollection);
-    event TransferAllowedWhitelistUpdated(address[] newTransferAllowedWhitelist);
+    event AddedToTransferAllowedWhitelist(address indexed addr);
+    event RemovedFromTransferAllowedWhitelist(address indexed addr);
+    event MintFeeUpdated(uint256 newMintFee);
+    event DiscountedMintFeeUpdated(uint256 newDiscountedMintFee);
 
     constructor(
         string memory name,
         string memory symbol,
-        address initialOwner,
+        address owner,
         string memory _metadataBaseURI,
         uint256 _mintFee,
         uint256 _discountedMintFee,
@@ -56,10 +57,11 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         address _claimableAnomadantCollection,
         address _claimableJohnnyTrainersCrewCollection,
         address _claimableJohnnyCollection,
-        address[] memory _whitelistCollection
+        address[] memory _whitelist,
+        address[] memory _transferAllowedToWhitelist
     )
         ERC721(name, symbol)
-        Ownable(initialOwner)
+        Ownable(owner)
     {
         metadataBaseURI = _metadataBaseURI;
         mintFee = _mintFee;
@@ -69,28 +71,29 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         claimableAnomadantCollection = _claimableAnomadantCollection;
         claimableJohnnyTrainersCrewCollection = _claimableJohnnyTrainersCrewCollection;
         claimableJohnnyCollection = _claimableJohnnyCollection;
-        whitelistCollection = _whitelistCollection;
+        addToWhitelist(_whitelist);
+        addToTransferAllowedWhitelist(_transferAllowedToWhitelist);
     }
 
     function safeMint(address to) public payable whenNotPaused nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
         require(msg.value == mintFee, "Incorrect Ether sent");
-        string memory metadataURI = formatMetadataURI(currentMintTokenId);
-        _safeMint(to, currentMintTokenId);
-        _setTokenURI(currentMintTokenId, metadataURI);
-        currentMintTokenId++;
-        emit Minted(to, currentMintTokenId - 1);
+        uint256 mintTokenId = currentMintTokenId++;
+        string memory metadataURI = formatMetadataURI(mintTokenId);
+        _safeMint(to, mintTokenId);
+        _setTokenURI(mintTokenId, metadataURI);
+        emit Minted(to, mintTokenId);
     }
 
     function safeMintWhitelist() public payable whenNotPaused nonReentrant {
         require(currentMintTokenId <= mintCapId, "Max supply reached");
         require(isAddressWhitelisted(msg.sender), "Not whitelisted");
         require(msg.value == discountedMintFee, "Incorrect Ether sent");
-        string memory metadataURI = formatMetadataURI(currentMintTokenId);
-        _safeMint(msg.sender, currentMintTokenId);
-        _setTokenURI(currentMintTokenId, metadataURI);
-        currentMintTokenId++;
-        emit MintedWhitelist(msg.sender, currentMintTokenId - 1);
+        uint256 mintTokenId = currentMintTokenId++;
+        string memory metadataURI = formatMetadataURI(mintTokenId);
+        _safeMint(msg.sender, mintTokenId);
+        _setTokenURI(mintTokenId, metadataURI);
+        emit MintedWhitelist(msg.sender, mintTokenId);
     }
 
     function safeClaimGhibiliCollection(uint256 claimableTokenId) public whenNotPaused nonReentrant{
@@ -98,11 +101,11 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         require(IERC721(claimableGhibiliCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of claimable token");
         require(!claimsGhibiliCollection[claimableTokenId], "Already claimed");
         claimsGhibiliCollection[claimableTokenId] = true;
-        string memory metadataURI = formatMetadataURI(currentClaimTokenId);
-        _safeMint(msg.sender, currentClaimTokenId);
-        _setTokenURI(currentClaimTokenId, metadataURI);
-        currentClaimTokenId++;
-        emit Claimed(msg.sender, currentClaimTokenId - 1, claimableTokenId, 'Ghibili');
+        uint256 claimTokenId = currentClaimTokenId++;
+        string memory metadataURI = formatMetadataURI(claimTokenId);
+        _safeMint(msg.sender, claimTokenId);
+        _setTokenURI(claimTokenId, metadataURI);
+        emit Claimed(msg.sender, claimTokenId, claimableTokenId, 'Ghibili');
     }
 
     function safeClaimAnomadantCollection(uint256 claimableTokenId) public whenNotPaused nonReentrant{
@@ -110,11 +113,11 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         require(IERC721(claimableAnomadantCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of claimable token");
         require(!claimsAnomadantCollection[claimableTokenId], "Already claimed");
         claimsAnomadantCollection[claimableTokenId] = true;
-        string memory metadataURI = formatMetadataURI(currentClaimTokenId);
-        _safeMint(msg.sender, currentClaimTokenId);
-        _setTokenURI(currentClaimTokenId, metadataURI);
-        currentClaimTokenId++;
-        emit Claimed(msg.sender, currentClaimTokenId - 1, claimableTokenId, 'Anomadant');
+        uint256 claimTokenId = currentClaimTokenId++;
+        string memory metadataURI = formatMetadataURI(claimTokenId);
+        _safeMint(msg.sender, claimTokenId);
+        _setTokenURI(claimTokenId, metadataURI);
+        emit Claimed(msg.sender, claimTokenId, claimableTokenId, 'Anomadant');
     }
 
     function safeClaimJohnnyTrainersCrewCollection(uint256 claimableTokenId) public whenNotPaused nonReentrant{
@@ -122,11 +125,11 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         require(IERC721(claimableJohnnyTrainersCrewCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of claimable token");
         require(!claimsJohnnyTrainersCrewCollection[claimableTokenId], "Already claimed");
         claimsJohnnyTrainersCrewCollection[claimableTokenId] = true;
-        string memory metadataURI = formatMetadataURI(currentClaimTokenId);
-        _safeMint(msg.sender, currentClaimTokenId);
-        _setTokenURI(currentClaimTokenId, metadataURI);
-        currentClaimTokenId++;
-        emit Claimed(msg.sender, currentClaimTokenId - 1, claimableTokenId, 'Johnny Trainers Crew');
+        uint256 claimTokenId = currentClaimTokenId++;
+        string memory metadataURI = formatMetadataURI(claimTokenId);
+        _safeMint(msg.sender, claimTokenId);
+        _setTokenURI(claimTokenId, metadataURI);
+        emit Claimed(msg.sender, claimTokenId, claimableTokenId, 'Johnny Trainers Crew');
     }
 
     function safeClaimJohnnyCollection(uint256 claimableTokenId) public whenNotPaused nonReentrant{
@@ -134,25 +137,35 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         require(IERC721(claimableJohnnyCollection).ownerOf(claimableTokenId) == msg.sender, "Not the owner of claimable token");
         require(!claimsJohnnyCollection[claimableTokenId], "Already claimed");
         claimsJohnnyCollection[claimableTokenId] = true;
-        string memory metadataURI = formatMetadataURI(currentClaimTokenId);
-        _safeMint(msg.sender, currentClaimTokenId);
-        _setTokenURI(currentClaimTokenId, metadataURI);
-        currentClaimTokenId++;
-        emit Claimed(msg.sender, currentClaimTokenId - 1, claimableTokenId, 'Johnny');
+        uint256 claimTokenId = currentClaimTokenId++;
+        string memory metadataURI = formatMetadataURI(claimTokenId);
+        _safeMint(msg.sender, claimTokenId);
+        _setTokenURI(claimTokenId, metadataURI);
+        emit Claimed(msg.sender, claimTokenId, claimableTokenId, 'Johnny');
     }
 
     function formatMetadataURI(uint256 tokenId) private view returns (string memory) {
         return string(abi.encodePacked(metadataBaseURI, Strings.toString(tokenId), ".json"));
     }
 
+    function setBaseURI(string memory newBaseURI) public onlyOwner {
+        metadataBaseURI = newBaseURI;
+        emit MetadataBaseURIUpdated(newBaseURI);
+    }
+
+    function setMintFee(uint256 newMintFee) public onlyOwner {
+        mintFee = newMintFee;
+        emit MintFeeUpdated(newMintFee);
+    }
+
+    function setDiscountedMintFee(uint256 newDiscountedMintFee) public onlyOwner {
+        discountedMintFee = newDiscountedMintFee;
+        emit DiscountedMintFeeUpdated(newDiscountedMintFee);
+    }
+
     function setTransferEnabledAfter(uint256 _transferEnabledAfter) public onlyOwner {
         transferEnabledAfter = _transferEnabledAfter;
         emit TransferEnabledAfterUpdated(_transferEnabledAfter);
-    }
-
-    function setTransferAllowedWhitelist(address[] memory _transferAllowedWhitelist) public onlyOwner {
-        transferAllowedWhitelist = _transferAllowedWhitelist;
-        emit TransferAllowedWhitelistUpdated(_transferAllowedWhitelist);
     }
 
     function setGhibiliCollection(address _claimableGhibiliCollection) public onlyOwner {
@@ -171,13 +184,10 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
     }
 
     function withdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
-        emit Withdraw(owner(), address(this).balance);
-    }
-
-    function setWhitelistCollection(address[] memory _whitelistCollection) public onlyOwner {
-        whitelistCollection = _whitelistCollection;
-        emit WhitelistCollectionUpdated(_whitelistCollection);
+        uint256 balance = address(this).balance;
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Withdrawal failed");
+        emit Withdraw(owner(), balance);
     }
 
     function addToWhitelist(address[] memory addresses) public onlyOwner {
@@ -195,16 +205,7 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
     }
 
     function isAddressWhitelisted(address addr) public view returns (bool) {
-        bool isManuallyWhitelisted = whitelist[addr];
-        if (isManuallyWhitelisted) {
-            return true;
-        }
-        for (uint256 i = 0; i < whitelistCollection.length; i++) {
-            if (IERC721(whitelistCollection[i]).balanceOf(addr) > 0) {
-                return true;
-            }
-        }
-        return false;
+        return whitelist[addr];
     }
 
     function pause() public onlyOwner {
@@ -215,13 +216,22 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         _unpause();
     }
 
-    function isTransferToAddressWhitelisted(address to) public view returns (bool) {
-        for (uint256 i = 0; i < transferAllowedWhitelist.length; i++) {
-            if (to == transferAllowedWhitelist[i]) {
-                return true;
-            }
+    function addToTransferAllowedWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            transferAllowedToWhitelist[addresses[i]] = true;
+            emit AddedToTransferAllowedWhitelist(addresses[i]);
         }
-        return false;
+    }
+
+    function removeFromTransferAllowedWhitelist(address[] memory addresses) public onlyOwner {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            transferAllowedToWhitelist[addresses[i]] = false;
+            emit RemovedFromTransferAllowedWhitelist(addresses[i]);
+        }
+    }
+
+    function isTransferToAddressWhitelisted(address to) public view returns (bool) {
+        return transferAllowedToWhitelist[to];
     }
 
     // The following functions are overrides required by Solidity.
@@ -248,7 +258,13 @@ contract SolverNodesStandard is ERC721, ERC721URIStorage, ERC721Pausable, Ownabl
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        return super.tokenURI(tokenId);
+        _requireOwned(tokenId);
+        return string(abi.encodePacked(metadataBaseURI, Strings.toString(tokenId), ".json"));
+    }
+
+    function transferOwnership(address newOwner) public override(Ownable) onlyOwner {
+        require(paused() == false, "Contract is paused");
+        super.transferOwnership(newOwner);
     }
 
     function supportsInterface(bytes4 interfaceId)

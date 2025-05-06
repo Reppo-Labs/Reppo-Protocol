@@ -22,7 +22,7 @@ describe("SolverNodesStandard", function () {
 
   async function deployStandardSolverNodes() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
-    const SolverNode = await hre.ethers.getContractFactory("SolverNodesStandard");
+    const SolverNode = await hre.ethers.getContractFactory("StandardSolverNodes");
     const standardSolverNodes = await SolverNode.deploy(
       name,
       symbol,
@@ -35,7 +35,8 @@ describe("SolverNodesStandard", function () {
       owner.address,
       owner.address,
       owner.address,
-      whitelistCollection,
+      [],
+      []
     );
     return { standardSolverNodes, owner, otherAccount };
   }
@@ -69,6 +70,17 @@ describe("SolverNodesStandard", function () {
       expect(await standardSolverNodes.balanceOf(owner.address)).to.equal(1);
       expect(await hre.ethers.provider.getBalance(standardSolverNodes.target)).to.equal(mintFee);
       expect(await standardSolverNodes.ownerOf(1)).to.equal(owner.address);
+    });
+
+    it ("Can mint multiple SolverNodes sequentially with standard minting fee", async function () {
+      const { standardSolverNodes, owner } = await loadFixture(deployStandardSolverNodes);
+      await standardSolverNodes.safeMint(owner.address, { value: mintFee });
+      await standardSolverNodes.safeMint(owner.address, { value: mintFee });
+      await standardSolverNodes.safeMint(owner.address, { value: mintFee });
+      expect(await standardSolverNodes.balanceOf(owner.address)).to.equal(3);
+      expect(await standardSolverNodes.ownerOf(1)).to.equal(owner.address);
+      expect(await standardSolverNodes.ownerOf(2)).to.equal(owner.address);
+      expect(await standardSolverNodes.ownerOf(3)).to.equal(owner.address);
     });
 
     it ("Throws an error when a non whitelisted user trying to mint a SolverNode with discounted minting fee", async function () {
@@ -115,7 +127,7 @@ describe("SolverNodesStandard", function () {
     it ("Can transfer NFTs to allowed whitelist addresses before transferEnabledAfter", async function () {
       const { standardSolverNodes, owner, otherAccount } = await loadFixture(deployStandardSolverNodes);
       await standardSolverNodes.safeMint(owner.address, { value: mintFee });
-      await standardSolverNodes.setTransferAllowedWhitelist([otherAccount.address]);
+      await standardSolverNodes.addToTransferAllowedWhitelist([otherAccount.address]);
       await standardSolverNodes.transferFrom(owner.address, otherAccount.address, 1);
       expect(await standardSolverNodes.balanceOf(otherAccount.address)).to.equal(1);
       expect(await standardSolverNodes.balanceOf(owner.address)).to.equal(0);
@@ -272,38 +284,7 @@ describe("SolverNodesStandard", function () {
       expect(await standardSolverNodes.isAddressWhitelisted(owner.address)).to.equal(false);
     });
 
-    it ("Can check if an address is whitelisted for whitelisted collection holder", async function () {
-      const { standardSolverNodes, owner, otherAccount } = await loadFixture(deployStandardSolverNodes);
-      const { ghibiliCollection } = await loadFixture(deployGhibiliCollection);
-      await standardSolverNodes.setWhitelistCollection([ghibiliCollection.target]);
-      await ghibiliCollection.safeMint(owner.address, 'uri');
-      expect(await standardSolverNodes.isAddressWhitelisted(owner.address)).to.equal(true);
-      expect(await standardSolverNodes.isAddressWhitelisted(otherAccount.address)).to.equal(false);
-    });
-
-    it ("Whitelisted collection holder can buy SolverNode at discount", async function () {
-      const { standardSolverNodes, owner, otherAccount } = await loadFixture(deployStandardSolverNodes);
-      const { ghibiliCollection } = await loadFixture(deployGhibiliCollection);
-      await standardSolverNodes.setWhitelistCollection([ghibiliCollection.target]);
-      await ghibiliCollection.safeMint(owner.address, 'uri');
-      await standardSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      expect(await standardSolverNodes.balanceOf(owner.address)).to.equal(1);
-      expect(await hre.ethers.provider.getBalance(standardSolverNodes.target)).to.equal(discountedMintFee);
-      expect(await standardSolverNodes.ownerOf(1)).to.equal(owner.address);
-    });
-
-    it ("Whitelisted collection holder can buy multiple SolverNodes at discount", async function () {
-      const { standardSolverNodes, owner, otherAccount } = await loadFixture(deployStandardSolverNodes);
-      const { ghibiliCollection } = await loadFixture(deployGhibiliCollection);
-      await standardSolverNodes.setWhitelistCollection([ghibiliCollection.target]);
-      await ghibiliCollection.safeMint(owner.address, 'uri');
-      await standardSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      await standardSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      await standardSolverNodes.safeMintWhitelist({ value: discountedMintFee });
-      expect(await standardSolverNodes.balanceOf(owner.address)).to.equal(3);
-    });
-
-    it ("Manualy whitelisted address can buy multiple SolverNodes at discount", async function () {
+    it ("Whitelisted address can buy multiple SolverNodes at discount", async function () {
       const { standardSolverNodes, owner, otherAccount } = await loadFixture(deployStandardSolverNodes);
       await standardSolverNodes.addToWhitelist([otherAccount.address]);
       expect(await standardSolverNodes.isAddressWhitelisted(otherAccount.address)).to.equal(true);

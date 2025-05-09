@@ -17,7 +17,7 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
-    'base-mainnet': {
+    'base': {
       url: 'https://mainnet.base.org',
       accounts: [WALLET_KEY],
       gasPrice: 1000000000,

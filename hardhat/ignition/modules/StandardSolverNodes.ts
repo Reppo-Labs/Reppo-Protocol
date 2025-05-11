@@ -38,10 +38,16 @@ const standardSolverNodes = buildModule("StandardSolverNodesModule", (m) => {
 
 export default standardSolverNodes;
 
-// 0x8A1BCBd935c9c7350013786D5d1118832F10e149
-// npx hardhat ignition deploy ignition/modules/StandardSolverNodes.ts --network base --deployment-id standard-solver-nodes-v1
-// npx hardhat ignition verify standard-solver-nodes-v1
+/**  
+base
+0x8A1BCBd935c9c7350013786D5d1118832F10e149
+npx hardhat ignition deploy ignition/modules/StandardSolverNodes.ts --network base --deployment-id standard-solver-nodes-v1
+npx hardhat ignition verify standard-solver-nodes-v1
+*/
 
-// 0x510119f9F26D3CA812F3ed630cab9B739003a6c1
-// npx hardhat ignition deploy ignition/modules/StandardSolverNodes.ts --network base-sepolia --deployment-id standard-solver-nodes-v1
-// npx hardhat ignition verify standard-solver-nodes-v1
+/**  
+base-sepolia
+0x510119f9F26D3CA812F3ed630cab9B739003a6c1
+npx hardhat ignition deploy ignition/modules/StandardSolverNodes.ts --network base-sepolia --deployment-id standard-solver-nodes-v1
+npx hardhat ignition verify standard-solver-nodes-v1
+*/
